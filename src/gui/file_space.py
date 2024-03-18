@@ -56,7 +56,7 @@ class FileSpace():
         self._file_table.setSelectionBehavior(PyQt5.QtWidgets.QTableView.SelectRows)
         self._file_table.setEditTriggers(PyQt5.QtWidgets.QAbstractItemView.NoEditTriggers)
         # Set column widths
-        self._file_table.setColumnWidth(0, 200)  # Filenames
+        self._file_table.setColumnWidth(0, 400)  # Filenames
         self._file_table.setColumnWidth(1, 70)   # Likes
         self._file_table.setColumnWidth(2, 70)   # Dislikes
         self._file_table.setColumnWidth(3, 70)   # Comments
@@ -83,6 +83,8 @@ def main():
     filespace = FileSpace(data)
     frame.setLayout(filespace.get_layout())
     window.setCentralWidget(frame)
+    screen_size = PyQt5.QtWidgets.QDesktopWidget().screenGeometry()
+    window.resize(screen_size.width()//2, screen_size.height()//2)
     window.show()
     sys.exit(app.exec_())
 

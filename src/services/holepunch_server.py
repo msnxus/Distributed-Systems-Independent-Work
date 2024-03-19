@@ -19,7 +19,4 @@ def udp_server(host, port):
     sock.sendto(socket_utils.addr_to_bytes(client_b), client_a)
     sock.sendto(socket_utils.addr_to_bytes(client_a), client_b)
 
-addr = ('0.0.0.0', 4000)
-udp_server(addr)
-
 #------------------------------------------------------------------

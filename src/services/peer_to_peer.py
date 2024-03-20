@@ -7,6 +7,7 @@
 import sys
 import argparse
 import socket
+sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
 from utils import socket_utils
 from threading import Thread
 
@@ -42,10 +43,10 @@ def main():
     parser.add_argument("port", type = int,
         metavar="[0-65535]",
         help="the port at which the server is listening")
-    parser.parse_args()
+    args = parser.parse_args()
 
     # server_addr = ('172.214.83.79', 4000) # the server's  public address + port
-    addr = (parser.host, parser.port)
+    addr = (args.host, args.port)
     send_socket_communication(addr)
 
 #------------------------------------------------------------------

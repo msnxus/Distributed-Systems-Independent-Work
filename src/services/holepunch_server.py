@@ -10,10 +10,7 @@ from threading import Thread
 
 #------------------------------------------------------------------
 
-def udp_server(host, port):
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind(host, port)
-
+def udp_server(sock):
     _, client_a = sock.recvfrom(0)
     _, client_b = sock.recvfrom(0)
     sock.sendto(socket_utils.addr_to_bytes(client_b), client_a)

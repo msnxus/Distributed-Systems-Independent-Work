@@ -8,6 +8,7 @@ import sys
 import argparse
 import socket
 import os
+import holepunch_server
 
 #------------------------------------------------------------------
 
@@ -38,7 +39,7 @@ def main():
                 sock, _ = server_sock.accept()
                 with sock:
                     print('Accepted connection, opened socket')
-                    # DO SOMETHING ! 
+                    holepunch_server.udp_server(sock)
             except Exception as ex:
                 print(sys.argv[0] + ":", ex, file=sys.stderr)
                 sys.exit(1)

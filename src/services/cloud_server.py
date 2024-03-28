@@ -19,17 +19,17 @@ def bytes_to_addr(addr):
     return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
 
 def udp_server(sock):
-    _, host = sock.recvfrom(0)
-    print('Received confirmation from host')
-    _, client = sock.recvfrom(0)
-    print('Received confirmation from client')
-    print('Sending addresses to peers')
     try:
+        _, host = sock.recvfrom(1)
+        print('Received confirmation from host at: {}:{}'.format(*host))
+        _, client = sock.recvfrom(1)
+        print('Received confirmation from client at: {}:{}'.format(*client))
+        print('Sending addresses to peers')
         sock.sendto(addr_to_bytes(client), host)
-        sock.sendto(addr_to_bytes(client), host)
+        sock.sendto(addr_to_bytes(host), client)
     except Exception as ex:
             print(sys.argv[0] + ":", ex, file=sys.stderr)
-            sys.exit(1)
+            return
     print('Address swap complete')
 
 def main():
@@ -41,22 +41,18 @@ def main():
                    help="the port at which the server should listen")
 
     args = parser.parse_args()
-
+    
     try:
-        port = int(args.port)
-        server_sock = socket.socket()
-        print('Opened server socket')
-        if os.name != 'nt':
-            server_sock.setsockopt(socket.SOL_SOCKET,
-                                   socket.SO_REUSEADDR, 1)
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_sock:
+            port = int(args.port)
+            print('Opened server socket')
+            if os.name != 'nt':
+                server_sock.setsockopt(socket.SOL_SOCKET,
+                                    socket.SO_REUSEADDR, 1)
 
-        server_sock.bind(('', port))
-        print('Bound server socket to port')
-        try:
+            server_sock.bind(('0.0.0.0', port))
+            print('Bound server socket to port')
             udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
-        except Exception as ex:
-            print(sys.argv[0] + ":", ex, file=sys.stderr)
-            sys.exit(1)
         print('Closed socket')
 
     except Exception as ex:

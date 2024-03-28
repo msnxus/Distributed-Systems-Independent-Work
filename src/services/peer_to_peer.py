@@ -8,31 +8,40 @@ import sys
 import argparse
 import socket
 sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
-from utils import socket_utils
+# from utils import socket_utils
 from threading import Thread
+import struct
 
 #------------------------------------------------------------------
+# From stack overflow: https://stackoverflow.com/questions/53479668/how-to-make-2-clients-connect-each-other-directly-after-having-both-connected-a
+def addr_to_bytes(addr):
+    return socket.inet_aton(addr[0]) + struct.pack('H', addr[1])
+
+def bytes_to_addr(addr):
+    return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
 
 def udp_client(addr, sock):
-    print('Sending packet to server')
-    sock.sendto(b'', (addr[0], addr[1])) # REPLACE WITH PARTICULAR KEY
-    data, _ = sock.recvfrom(6)
-    print('Received data from server')
-    peer = socket_utils.bytes_to_addr(data)
-    print('Peer:', *peer)
-
-    Thread(target=sock.sendto, args=(b'hello', peer)).start()
-    data, addr = sock.recvfrom(1024)
-    print('{}:{} says {}'.format(*addr, data))
-
-def send_socket_communication(addr):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            udp_client(addr, sock)
-            print('Closing socket')
+            print('Sending packet to server at: {}:{}'.format(*addr))
+            sock.sendto(b'a', (addr[0], addr[1])) # REPLACE WITH PARTICULAR KEY
+            data, _ = sock.recvfrom(6) # 4 bytes for ip, 2 for port
+            print('Received data from server')
+            peer = bytes_to_addr(data)
+            print('Peer:', *peer)
+
+            Thread(target=sock.sendto, args=(b'hello', peer)).start()
+            data, addr = sock.recvfrom(1024)
+            print('{}:{} says {}'.format(*addr, data))
+        print('Closed socket')
     except Exception as ex:
-        print(ex)
-        sys.exit(1)
+         print(ex, file=sys.stderr)
+         sys.exit(1)
+    return peer
+
+def get_peer_addr(server_addr):
+    peer_addr = udp_client(server_addr)
+    return peer_addr
 
 def main():
     parser = argparse.ArgumentParser(description=(
@@ -44,9 +53,8 @@ def main():
         help="the port at which the server is listening")
     args = parser.parse_args()
 
-    # server_addr = ('172.214.83.79', 4000) # the server's  public address + port
     addr = (args.host, args.port)
-    send_socket_communication(addr)
+    get_peer_addr(addr)
 
 #------------------------------------------------------------------
 if __name__ == '__main__':

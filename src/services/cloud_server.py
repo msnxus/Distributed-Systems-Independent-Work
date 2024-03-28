@@ -8,9 +8,29 @@ import sys
 import argparse
 import socket
 import os
-import holepunch_server
+import struct
 
 #------------------------------------------------------------------
+# From stack overflow: https://stackoverflow.com/questions/53479668/how-to-make-2-clients-connect-each-other-directly-after-having-both-connected-a
+def addr_to_bytes(addr):
+    return socket.inet_aton(addr[0]) + struct.pack('H', addr[1])
+
+def bytes_to_addr(addr):
+    return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
+
+def udp_server(sock):
+    _, host = sock.recvfrom(0)
+    print('Received confirmation from host')
+    _, client = sock.recvfrom(0)
+    print('Received confirmation from client')
+    print('Sending addresses to peers')
+    try:
+        sock.sendto(addr_to_bytes(client), host)
+        sock.sendto(addr_to_bytes(client), host)
+    except Exception as ex:
+            print(sys.argv[0] + ":", ex, file=sys.stderr)
+            sys.exit(1)
+    print('Address swap complete')
 
 def main():
     # Socket stuff
@@ -32,18 +52,12 @@ def main():
 
         server_sock.bind(('', port))
         print('Bound server socket to port')
-        server_sock.listen()
-        print('Listening')
-        while True:
-            try:
-                sock, _ = server_sock.accept()
-                with sock:
-                    print('Accepted connection, opened socket')
-                    holepunch_server.udp_server(sock)
-            except Exception as ex:
-                print(sys.argv[0] + ":", ex, file=sys.stderr)
-                sys.exit(1)
-            print('Closed socket')
+        try:
+            udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
+        except Exception as ex:
+            print(sys.argv[0] + ":", ex, file=sys.stderr)
+            sys.exit(1)
+        print('Closed socket')
 
     except Exception as ex:
         print(sys.argv[0] + ":", ex, file=sys.stderr)

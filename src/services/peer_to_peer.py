@@ -14,23 +14,22 @@ from threading import Thread
 #------------------------------------------------------------------
 
 def udp_client(addr, sock):
-    sock.sendto(b'', (addr[0], addr[1]))
+    print('Sending packet to server')
+    sock.sendto(b'', (addr[0], addr[1])) # REPLACE WITH PARTICULAR KEY
     data, _ = sock.recvfrom(6)
+    print('Received data from server')
     peer = socket_utils.bytes_to_addr(data)
-    print('peer:', *peer)
+    print('Peer:', *peer)
 
     Thread(target=sock.sendto, args=(b'hello', peer)).start()
     data, addr = sock.recvfrom(1024)
     print('{}:{} says {}'.format(*addr, data))
 
 def send_socket_communication(addr):
-    host = addr[0]
-    port = addr[1]
-
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            sock.connect((host, port))
             udp_client(addr, sock)
+            print('Closing socket')
     except Exception as ex:
         print(ex)
         sys.exit(1)

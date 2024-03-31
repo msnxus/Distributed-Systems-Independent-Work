@@ -78,9 +78,10 @@ def host_clicked_slot(password):
     return
 
 def peer_popup(host, client_addr):
-    reply = QMessageBox.question('New Peer Detected', 
-                            f"Do you want to add this peer: {client_addr}?",
-                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+    reply = QMessageBox.question(title='New Peer Detected', 
+                            text=f"Do you want to add this peer: {client_addr}?",
+                            buttons=QMessageBox.Yes | QMessageBox.No,
+                            defaultbutton=QMessageBox.No)
     if reply == QMessageBox.Yes:
         print("Host agreed to add peer.")
         host.add_peer(client_addr)

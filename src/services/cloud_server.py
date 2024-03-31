@@ -51,7 +51,7 @@ def main():
                                     socket.SO_REUSEADDR, 1)
 
             server_sock.bind(('0.0.0.0', port))
-            print('Bound server socket to port at: {}'.format(*server_sock.getsockname()))
+            print('Bound server socket to port at: {}'.format(server_sock.getsockname()))
             udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
         print('Closed socket')
 

@@ -34,6 +34,7 @@ def udp_server(sock: socket.socket):
     print('Address swap complete')
 
 def open_host(sock: socket.socket):
+    # Receives port suggestion from host, opens that port to facilitate p2p
     try:
         p2p_port, host = sock.recvfrom(4)
         p2p_port = int.from_bytes(p2p_port, 'big')
@@ -57,6 +58,7 @@ def open_host(sock: socket.socket):
         sys.exit(1)
 
 def main():
+    # Starts cloud server. Listens on params.PORT for new hosts
     while(True):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_sock:

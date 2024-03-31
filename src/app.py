@@ -39,7 +39,11 @@ def simple_hash(password):
     hash_value = 0
     for char in password:
         hash_value = hash_value * base + charset.index(char)
-    hash_value = hash_value % 65536
+    # Adjust the hash value to fit into the range of 10005 to 65000
+    min_port = 10005
+    max_port = 65000
+    range_size = max_port - min_port + 1
+    hash_value = (hash_value % range_size) + min_port
     return hash_value
 
 def connect_clicked_slot(password):

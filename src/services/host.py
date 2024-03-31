@@ -27,7 +27,7 @@ class Host(QObject):
 
         self.init_cloud_server()
         print('Waiting 5 seconds to send host packet')
-        time.sleep(5)
+        time.sleep(5) # Gives server time to open the p2p port before trying to discover peers on it
         Thread(target=self.search_for_peers).start()
         return
     
@@ -38,6 +38,7 @@ class Host(QObject):
         return self._peers
     
     def init_cloud_server(self):
+        # Send cloud server suggested p2p port on its dedicated listening port
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
                 print('Sending cloud init port to server at: {}:{}'.format(params.SERVER_IP, params.PORT))
@@ -50,7 +51,6 @@ class Host(QObject):
         while(True):
             try:
                 client_addr = peer_to_peer.get_peer_addr(self._server_addr)
-                print('jingowingo: {}'.format(client_addr))
                 self._new_peer.emit(client_addr)
             except Exception as ex:
                 print(ex, file=sys.stderr)

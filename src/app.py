@@ -6,9 +6,20 @@
 
 import PyQt5
 import PyQt5.QtWidgets
+from PyQt5.QtWidgets import QMessageBox
 import sys
 import gui.homepage
+import gui.file_space
+from services import peer_to_peer
+import services.host, services.client
+import time
+from threading import Thread
 
+#------------------------------------------------------------------
+#   Instance variables
+#------------------------------------------------------------------
+SERVER_IP = ('172.214.83.79') # MyLowCostVM on Azure :D 
+_window = None
 #------------------------------------------------------------------
 #   Filespace
 #------------------------------------------------------------------
@@ -16,21 +27,78 @@ import gui.homepage
 #------------------------------------------------------------------
 #   Homepage
 #------------------------------------------------------------------
+
+def simple_hash(password):
+    charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+    if (len(password) < 1 or len(password) > 4):
+        raise ValueError("Password must be 1 to 4 characters long")
+    for char in password:
+        if char not in charset: raise ValueError(f"Invalid character in password: '{char}'")
+    
+    base = 62
+    hash_value = 0
+    for char in password:
+        hash_value = hash_value * base + charset.index(char)
+    hash_value = hash_value % 65536
+    return hash_value
+
 def connect_clicked_slot(password):
-    print("connect with password %s" % password)
+    try:
+        port = simple_hash(password)
+    except Exception as ex:
+        print(ex)
+        return
+    print("connect with password %s, which corresponds to port %d" % (password, port))
+
+    client = services.client.Client((SERVER_IP, port))
+
     return
 
 def host_clicked_slot(password):
-    print("host with password %s" % password)
+    try:
+        port = simple_hash(password)
+    except Exception as ex:
+        print(ex)
+        return
+    print("host with password %s, which corresponds to port %d" % (password, port))
+    
+    host = services.host.Host((SERVER_IP, port))
+    host._new_peer.connect(lambda: peer_popup(host))
+    Thread(target=test, args=[host]).start()
+    
+    filespace = gui.file_space.FileSpace()
+    frame = PyQt5.QtWidgets.QFrame()
+    frame.setLayout(filespace.get_layout())
+    _window.setCentralWidget(frame)
+    _window.setWindowTitle("File Space")
     return
+
+def peer_popup(host, client_addr):
+    reply = QMessageBox.question('New Peer Detected', 
+                            f"Do you want to add this peer: {client_addr}?",
+                            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+    if reply == QMessageBox.Yes:
+        print("Host agreed to add peer.")
+        host.add_peer(client_addr)
+    else:
+        print("Host declined to add peer.")
+
+def test(host):
+    while(True):
+            print('Peers ----------')
+            print(host.get_peers())
+            time.sleep(10)
 
 #------------------------------------------------------------------
 #   Main
 #------------------------------------------------------------------
 def main():
+    global _window
+
     app = PyQt5.QtWidgets.QApplication(sys.argv)
 
-    window = PyQt5.QtWidgets.QMainWindow()
+    _window = PyQt5.QtWidgets.QMainWindow()
 
     # Setup homepage + connect buttons to slots
     homepage = gui.homepage.HomePage()
@@ -42,11 +110,11 @@ def main():
     frame = PyQt5.QtWidgets.QFrame()
     frame.setLayout(homepage.get_layout())
 
-    window.setCentralWidget(frame)
+    _window.setCentralWidget(frame)
     screen_size = PyQt5.QtWidgets.QDesktopWidget().screenGeometry()
-    window.resize(screen_size.width()//2, screen_size.height()//2)
-    window.setWindowTitle("Princeton University Class Search")          # FIX THIS TEXT !
-    window.show()
+    _window.resize(screen_size.width()//2, screen_size.height()//2)
+    _window.setWindowTitle("Homepage")
+    _window.show()
 
     sys.exit(app.exec_())
 

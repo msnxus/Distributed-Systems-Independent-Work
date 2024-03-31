@@ -16,7 +16,7 @@ SYNC_BUTTON_TEXT = "Sync"
 
 class FileSpace():
     # Initialize SQLite database connection and retrieve data
-    def __init__(self, data):
+    def __init__(self, data=None):
         self._layout = PyQt5.QtWidgets.QGridLayout()
         self._file_table = PyQt5.QtWidgets.QTableView()
         self._host_status = PyQt5.QtWidgets.QLabel()
@@ -46,10 +46,11 @@ class FileSpace():
 
         # Populate the model with data
         self._model.setHorizontalHeaderLabels(["Filename", "Likes", "Dislikes", "Comments"])
-        for row_idx, row_data in enumerate(data):
-            for col_idx, cell_data in enumerate(row_data):
-                item = QStandardItem(str(cell_data))
-                self._model.setItem(row_idx, col_idx, item)
+        if data is not None:
+            for row_idx, row_data in enumerate(data):
+                for col_idx, cell_data in enumerate(row_data):
+                    item = QStandardItem(str(cell_data))
+                    self._model.setItem(row_idx, col_idx, item)
 
         # Table
         self._file_table.setSortingEnabled(True)

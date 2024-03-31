@@ -20,11 +20,11 @@ def addr_to_bytes(addr):
 def bytes_to_addr(addr):
     return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
 
-def udp_client(addr, sock):
+def udp_client(addr):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             print('Sending packet to server at: {}:{}'.format(*addr))
-            sock.sendto(b'a', (addr[0], addr[1])) # REPLACE WITH PARTICULAR KEY
+            sock.sendto(b'a', (addr[0], addr[1]))
             data, _ = sock.recvfrom(6) # 4 bytes for ip, 2 for port
             print('Received data from server')
             peer = bytes_to_addr(data)
@@ -40,6 +40,17 @@ def udp_client(addr, sock):
     return peer
 
 def get_peer_addr(server_addr):
+    # Validate server_addr
+    if not isinstance(server_addr, tuple) or len(server_addr) != 2:
+        raise ValueError("server_addr must be a tuple (host, port)")
+    
+    host, port = server_addr
+    if not isinstance(host, str) or not host:
+        raise ValueError("Host must be a non-empty string")
+    
+    if not (isinstance(port, int) and 0 <= port <= 65535):
+        raise ValueError("Port must be an integer between 0 and 65535")
+    
     peer_addr = udp_client(server_addr)
     return peer_addr
 

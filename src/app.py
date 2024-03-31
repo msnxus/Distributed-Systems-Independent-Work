@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QMessageBox
 import sys
 import gui.homepage
 import gui.file_space
-from services import peer_to_peer
+from services import params
 import services.host, services.client
 import time
 from threading import Thread
@@ -18,7 +18,6 @@ from threading import Thread
 #------------------------------------------------------------------
 #   Instance variables
 #------------------------------------------------------------------
-SERVER_IP = ('172.214.83.79') # MyLowCostVM on Azure :D 
 _window = None
 #------------------------------------------------------------------
 #   Filespace
@@ -51,7 +50,7 @@ def connect_clicked_slot(password):
         return
     print("connect with password %s, which corresponds to port %d" % (password, port))
 
-    client = services.client.Client((SERVER_IP, port))
+    client = services.client.Client((params.SERVER_IP, port))
 
     return
 
@@ -63,8 +62,8 @@ def host_clicked_slot(password):
         return
     print("host with password %s, which corresponds to port %d" % (password, port))
     
-    host = services.host.Host((SERVER_IP, port))
-    host._new_peer.connect(lambda: peer_popup(host))
+    host = services.host.Host((params.SERVER_IP, port))
+    host._new_peer.connect(lambda *args: peer_popup(host, args))
     Thread(target=test, args=[host]).start()
     
     filespace = gui.file_space.FileSpace()

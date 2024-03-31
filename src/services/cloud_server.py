@@ -9,6 +9,7 @@ import argparse
 import socket
 import os
 import struct
+import params
 
 #------------------------------------------------------------------
 # From stack overflow: https://stackoverflow.com/questions/53479668/how-to-make-2-clients-connect-each-other-directly-after-having-both-connected-a
@@ -32,32 +33,45 @@ def udp_server(sock):
             return
     print('Address swap complete')
 
-def main():
-    # Socket stuff
-    parser = argparse.ArgumentParser(
-        description="Server host for holepunching and offline storage")
-    parser.add_argument("port", type = int,
-                   metavar="[0-65535]",
-                   help="the port at which the server should listen")
-
-    args = parser.parse_args()
-    
+def open_host(sock):
+    try:
+        p2p_port, host = sock.recvfrom(4)
+        print('Received P2P port: {} from host at: {}:{}'.format(p2p_port, *host))
+    except Exception as ex:
+            print(sys.argv[0] + ":", ex, file=sys.stderr)
+            return
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_sock:
-            port = int(args.port)
             print('Opened server socket')
             if os.name != 'nt':
                 server_sock.setsockopt(socket.SOL_SOCKET,
                                     socket.SO_REUSEADDR, 1)
 
-            server_sock.bind(('0.0.0.0', port))
-            print('Bound server socket to port at: {}'.format(server_sock.getsockname()))
+            server_sock.bind(('0.0.0.0', p2p_port))
+            print('Bound server socket to port at: {}:{}'.format(*server_sock.getsockname()))
             udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
         print('Closed socket')
 
     except Exception as ex:
         print(sys.argv[0] + ":", ex, file=sys.stderr)
         sys.exit(1)
+
+def main():
+    while(True):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_sock:
+                print('Initialized cloud port')
+                if os.name != 'nt':
+                    server_sock.setsockopt(socket.SOL_SOCKET,
+                                        socket.SO_REUSEADDR, 1)
+                server_sock.bind(('0.0.0.0', params.PORT))
+                print('Bound cloud socket to port at: {}:{}'.format(*server_sock.getsockname()))
+                open_host(server_sock)
+            print('Closed socket')
+
+        except Exception as ex:
+            print(sys.argv[0] + ":", ex, file=sys.stderr)
+            sys.exit(1)
 
 #------------------------------------------------------------------
 if __name__ == '__main__':

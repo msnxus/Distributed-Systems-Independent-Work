@@ -13,6 +13,7 @@ from threading import Thread
 import peer_to_peer
 from PyQt5.QtCore import QObject, pyqtSignal
 import params
+import time
 
 #------------------------------------------------------------------
 
@@ -25,7 +26,8 @@ class Host(QObject):
         self._server_addr = server_addr
 
         self.init_cloud_server()
-        
+        print('Waiting 5 seconds to send host packet')
+        time.sleep(5)
         Thread(target=self.search_for_peers).start()
         return
     
@@ -40,8 +42,6 @@ class Host(QObject):
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
                 print('Sending cloud init port to server at: {}:{}'.format(params.SERVER_IP, params.PORT))
                 sock.sendto(self._server_addr[1].to_bytes(4), (params.SERVER_IP, params.PORT))
-                confirmation, _ = sock.recvfrom(1)
-                if confirmation == b'\x01': print('Cloud confirmed port {} is open for p2p'.format(self._server_addr[1]))
         except Exception as ex:
                 print(ex, file=sys.stderr)
                 sys.exit(1)

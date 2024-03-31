@@ -19,10 +19,8 @@ def addr_to_bytes(addr):
 def bytes_to_addr(addr):
     return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
 
-def udp_server(sock: socket.socket, creator):
+def udp_server(sock: socket.socket):
     try:
-        confirmation = b'\x01'
-        sock.sendto(confirmation, creator)
         _, host = sock.recvfrom(1)
         print('Received confirmation from host at: {}:{}'.format(*host))
         _, client = sock.recvfrom(1)
@@ -51,7 +49,7 @@ def open_host(sock: socket.socket):
                                     socket.SO_REUSEADDR, 1)
             server_sock.bind(('0.0.0.0', p2p_port))
             print('Bound server socket to port at: {}:{}'.format(*server_sock.getsockname()))
-            udp_server(server_sock, host) # For UDP protocol, no need to socket.listen / accept
+            udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
         print('Closed socket')
 
     except Exception as ex:

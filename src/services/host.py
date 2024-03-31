@@ -26,8 +26,8 @@ class Host(QObject):
         self._server_addr = server_addr
 
         self.init_cloud_server()
-        print('Waiting 5 seconds to send host packet')
-        time.sleep(5) # Gives server time to open the p2p port before trying to discover peers on it
+        print('Waiting 2 seconds to send host packet')
+        time.sleep(2) # Gives server time to open the p2p port before trying to discover peers on it
         Thread(target=self.search_for_peers).start()
         return
     

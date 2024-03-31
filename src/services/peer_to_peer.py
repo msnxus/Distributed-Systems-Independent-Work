@@ -31,7 +31,6 @@ def udp_client(addr):
             peer = bytes_to_addr(data)
             print('Peer:', *peer)
             sock.sendto(b'hello', peer)
-            time.sleep(1)
             data, addr = sock.recvfrom(1024)
             print('{}:{} says {}'.format(*addr, data))
         print('Closed socket')

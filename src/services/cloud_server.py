@@ -19,8 +19,10 @@ def addr_to_bytes(addr):
 def bytes_to_addr(addr):
     return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
 
-def udp_server(sock):
+def udp_server(sock: socket.socket, creator):
     try:
+        confirmation = 0x01
+        sock.sendto(confirmation, creator)
         _, host = sock.recvfrom(1)
         print('Received confirmation from host at: {}:{}'.format(*host))
         _, client = sock.recvfrom(1)
@@ -33,7 +35,7 @@ def udp_server(sock):
             return
     print('Address swap complete')
 
-def open_host(sock):
+def open_host(sock: socket.socket):
     try:
         p2p_port, host = sock.recvfrom(4)
         p2p_port = int.from_bytes(p2p_port, 'big')
@@ -47,10 +49,9 @@ def open_host(sock):
             if os.name != 'nt':
                 server_sock.setsockopt(socket.SOL_SOCKET,
                                     socket.SO_REUSEADDR, 1)
-
             server_sock.bind(('0.0.0.0', p2p_port))
             print('Bound server socket to port at: {}:{}'.format(*server_sock.getsockname()))
-            udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
+            udp_server(server_sock, host) # For UDP protocol, no need to socket.listen / accept
         print('Closed socket')
 
     except Exception as ex:
@@ -61,12 +62,12 @@ def main():
     while(True):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_sock:
-                print('Initialized cloud port')
+                print('Initialized cloud listening socket')
                 if os.name != 'nt':
                     server_sock.setsockopt(socket.SOL_SOCKET,
                                         socket.SO_REUSEADDR, 1)
                 server_sock.bind(('0.0.0.0', params.PORT))
-                print('Bound cloud socket to port at: {}:{}'.format(*server_sock.getsockname()))
+                print('Bound cloud listening socket to port at: {}:{}'.format(*server_sock.getsockname()))
                 open_host(server_sock)
             print('Closed socket')
 

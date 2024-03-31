@@ -36,7 +36,8 @@ def udp_server(sock):
 def open_host(sock):
     try:
         p2p_port, host = sock.recvfrom(4)
-        print('Received P2P port: {} from host at: {}:{}'.format(int.from_bytes(p2p_port), *host))
+        p2p_port = int.from_bytes(p2p_port, 'big')
+        print('Received P2P port: {} from host at: {}:{}'.format(p2p_port, *host))
     except Exception as ex:
             print(sys.argv[0] + ":", ex, file=sys.stderr)
             return
@@ -47,7 +48,7 @@ def open_host(sock):
                 server_sock.setsockopt(socket.SOL_SOCKET,
                                     socket.SO_REUSEADDR, 1)
 
-            server_sock.bind(('0.0.0.0', int.from_bytes(p2p_port)))
+            server_sock.bind(('0.0.0.0', p2p_port))
             print('Bound server socket to port at: {}:{}'.format(*server_sock.getsockname()))
             udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
         print('Closed socket')

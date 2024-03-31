@@ -21,7 +21,7 @@ def bytes_to_addr(addr):
 
 def udp_server(sock: socket.socket, creator):
     try:
-        confirmation = 0x01
+        confirmation = b'\x01'
         sock.sendto(confirmation, creator)
         _, host = sock.recvfrom(1)
         print('Received confirmation from host at: {}:{}'.format(*host))

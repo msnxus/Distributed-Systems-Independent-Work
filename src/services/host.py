@@ -41,7 +41,7 @@ class Host(QObject):
                 print('Sending cloud init port to server at: {}:{}'.format(params.SERVER_IP, params.PORT))
                 sock.sendto(self._server_addr[1].to_bytes(4), (params.SERVER_IP, params.PORT))
                 confirmation, _ = sock.recvfrom(1)
-                if confirmation == 0x01: print('Cloud confirmed port {} is open for p2p'.format(self._server_addr[1]))
+                if confirmation == b'\x01': print('Cloud confirmed port {} is open for p2p'.format(self._server_addr[1]))
         except Exception as ex:
                 print(ex, file=sys.stderr)
                 sys.exit(1)

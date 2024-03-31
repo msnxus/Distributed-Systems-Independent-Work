@@ -50,7 +50,7 @@ def open_host(sock: socket.socket):
             server_sock.bind(('0.0.0.0', p2p_port))
             print('Bound server socket to port at: {}:{}'.format(*server_sock.getsockname()))
             udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
-        print('Closed socket')
+        print('Closed server socket')
 
     except Exception as ex:
         print(sys.argv[0] + ":", ex, file=sys.stderr)
@@ -67,7 +67,7 @@ def main():
                 server_sock.bind(('0.0.0.0', params.PORT))
                 print('Bound cloud listening socket to port at: {}:{}'.format(*server_sock.getsockname()))
                 open_host(server_sock)
-            print('Closed socket')
+            print('Closed cloud socket')
 
         except Exception as ex:
             print(sys.argv[0] + ":", ex, file=sys.stderr)

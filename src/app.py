@@ -90,9 +90,10 @@ def peer_popup(host, client_addr):
 
 def test(host):
     while(True):
+            time.sleep(5)
             print('Peers ----------')
             print(host.get_peers())
-            time.sleep(10)
+            time.sleep(5)
 
 #------------------------------------------------------------------
 #   Main

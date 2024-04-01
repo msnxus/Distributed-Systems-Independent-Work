@@ -30,7 +30,7 @@ def udp_client(addr):
             peer = bytes_to_addr(data)
             print('Peer:', *peer)
 
-            sock.sendto(bytes('hello', 'utf-8'), peer)
+            #sock.sendto(bytes('hello', 'utf-8'), peer)
             data, addr = sock.recvfrom(5)
 
             print('{}:{} says {}'.format(*addr, data.decode('utf-8')))

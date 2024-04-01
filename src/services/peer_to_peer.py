@@ -33,7 +33,7 @@ def udp_client(addr):
             Thread(target=sock.sendto, args=(bytes('hello', 'utf-8'), peer)).start()
             data, addr = sock.recvfrom(5)
 
-            print('{}:{} says {}'.format(*addr, data))
+            print('{}:{} says {}'.format(*addr, data.decode('utf-8')))
         print('Closed socket')
     except Exception as ex:
          print(ex, file=sys.stderr)

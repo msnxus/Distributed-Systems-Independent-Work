@@ -30,7 +30,8 @@ def udp_client(addr):
             peer = bytes_to_addr(data)
             print('Peer:', *peer)
 
-            Thread(target=sock.sendto, args=(b'hello', peer)).start()
+            for i in range(90):
+                Thread(target=sock.sendto, args=(b'hello', peer)).start()
             data, addr = sock.recvfrom(1024)
 
             print('{}:{} says {}'.format(*addr, data))

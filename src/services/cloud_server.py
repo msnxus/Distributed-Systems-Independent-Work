@@ -10,6 +10,7 @@ import socket
 import os
 import struct
 import params
+import time
 
 #------------------------------------------------------------------
 # From stack overflow: https://stackoverflow.com/questions/53479668/how-to-make-2-clients-connect-each-other-directly-after-having-both-connected-a
@@ -25,9 +26,10 @@ def udp_server(sock: socket.socket):
         print('Received confirmation from host at: {}:{}'.format(*host))
         _, client = sock.recvfrom(1)
         print('Received confirmation from client at: {}:{}'.format(*client))
+
         print('Sending addresses to peers')
-        sock.sendto(addr_to_bytes(host), client)
         sock.sendto(addr_to_bytes(client), host)
+        sock.sendto(addr_to_bytes(host), client)
     except Exception as ex:
             print(sys.argv[0] + ":", ex, file=sys.stderr)
             return

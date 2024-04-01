@@ -73,7 +73,7 @@ def main():
                         print(sys.argv[0] + ":", ex, file=sys.stderr)
                         return
     # Starts new p2p connection thread which will remain open indefinitely
-                Thread(target=open_host, args=(p2p_port)).start()
+                Thread(target=open_host, args=[p2p_port]).start()
             print('Closed cloud socket')
 
         except Exception as ex:

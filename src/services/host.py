@@ -25,9 +25,6 @@ class Host(QObject):
         self._peers = []
         self._server_addr = server_addr
 
-        self.init_cloud_server()
-        print('Waiting 2 seconds to send host packet')
-        time.sleep(2) # Gives server time to open the p2p port before trying to discover peers on it
         Thread(target=self.search_for_peers).start()
         return
     
@@ -48,12 +45,14 @@ class Host(QObject):
                 sys.exit(1)
 
     def search_for_peers(self):
-        while(True):
-            try:
-                client_addr = peer_to_peer.get_peer_addr(self._server_addr)
-                self._new_peer.emit(client_addr)
-            except Exception as ex:
-                print(ex, file=sys.stderr)
-                sys.exit(1)
+            while(True):
+                self.init_cloud_server()
+                print('Waiting 2 seconds to send host packet')
+                time.sleep(2) # Gives server time to open the p2p port before trying to discover peers on it
+                try:
+                    client_addr = peer_to_peer.get_peer_addr(self._server_addr)
+                    self._new_peer.emit(client_addr)
+                except Exception as ex:
+                    print(ex, file=sys.stderr)
 
 #------------------------------------------------------------------

@@ -68,7 +68,6 @@ def host_clicked_slot(password):
     
     host = services.host.Host((params.SERVER_IP, port))
     host._new_peer.connect(lambda args: peer_popup(host, args))
-    Thread(target=test, args=[host]).start()
     
     filespace = gui.file_space.FileSpace()
     frame = PyQt5.QtWidgets.QFrame()
@@ -88,13 +87,6 @@ def peer_popup(host, client_addr):
         host.add_peer(client_addr)
     else:
         print("Host declined to add peer.")
-
-def test(host):
-    while(True):
-            time.sleep(5)
-            print('Peers ----------')
-            print(host.get_peers())
-            time.sleep(5)
 
 #------------------------------------------------------------------
 #   Main

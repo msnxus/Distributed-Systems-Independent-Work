@@ -21,33 +21,33 @@ def addr_to_bytes(addr):
 def bytes_to_addr(addr):
     return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
 
-def udp_server(sock: socket.socket):
+def udp_server(p2p_port, sock: socket.socket):
     try:
         _, host = sock.recvfrom(1)
-        print('Received confirmation from host at: {}:{}'.format(*host))
+        print('[{}] Received confirmation from host at: {}:{}'.format(p2p_port, *host))
         _, client = sock.recvfrom(1)
-        print('Received confirmation from client at: {}:{}'.format(*client))
+        print('[{}] Received confirmation from client at: {}:{}'.format(p2p_port, *client))
 
-        print('Sending addresses to peers')
+        print('[{}] Sending addresses to peers'.format(p2p_port))
         sock.sendto(addr_to_bytes(client), host)
         sock.sendto(addr_to_bytes(host), client)
     except Exception as ex:
             print(sys.argv[0] + ":", ex, file=sys.stderr)
             return
-    print('Address swap complete')
+    print('[{}] Address swap complete'.format(p2p_port))
 
 def open_host(p2p_port):
     while(True):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_sock:
-                print('Opened server socket')
+                print('[{}] Opened server socket'.format(p2p_port))
                 if os.name != 'nt':
                     server_sock.setsockopt(socket.SOL_SOCKET,
                                         socket.SO_REUSEADDR, 1)
                 server_sock.bind(('0.0.0.0', p2p_port))
-                print('Bound server socket to port at: {}:{}'.format(*server_sock.getsockname()))
-                udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
-            print('Closed server socket')
+                print('[{}] Bound server socket to port at: {}:{}'.format(p2p_port, *server_sock.getsockname()))
+                udp_server(p2p_port, server_sock) # For UDP protocol, no need to socket.listen / accept
+            print('[{}] Closed server socket'.format(p2p_port))
 
         except Exception as ex:
             print(sys.argv[0] + ":", ex, file=sys.stderr)
@@ -58,23 +58,23 @@ def main():
     while(True):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as cloud_sock:
-                print('Initialized cloud listening socket')
+                print('[CLOUD] Initialized cloud listening socket')
                 if os.name != 'nt':
                     cloud_sock.setsockopt(socket.SOL_SOCKET,
                                         socket.SO_REUSEADDR, 1)
                 cloud_sock.bind(('0.0.0.0', params.PORT))
-                print('Bound cloud listening socket to port at: {}:{}'.format(*cloud_sock.getsockname()))
+                print('[CLOUD] Bound cloud listening socket to port at: {}:{}'.format(*cloud_sock.getsockname()))
     # Receives port suggestion from host, opens that port to facilitate p2p
                 try:
                     p2p_port, host = cloud_sock.recvfrom(4)
                     p2p_port = int.from_bytes(p2p_port, 'big')
-                    print('Received P2P port: {} from host at: {}:{}'.format(p2p_port, *host))
+                    print('[CLOUD] Received P2P port: {} from host at: {}:{}'.format(p2p_port, *host))
                 except Exception as ex:
                         print(sys.argv[0] + ":", ex, file=sys.stderr)
                         return
     # Starts new p2p connection thread which will remain open indefinitely
                 Thread(target=open_host, args=[p2p_port]).start()
-            print('Closed cloud socket')
+            print('[CLOUD] Closed cloud socket')
 
         except Exception as ex:
             print(sys.argv[0] + ":", ex, file=sys.stderr)

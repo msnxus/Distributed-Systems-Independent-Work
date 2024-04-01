@@ -11,7 +11,6 @@ sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
 # from utils import socket_utils
 from threading import Thread
 import struct
-import time
 
 #------------------------------------------------------------------
 # From stack overflow: https://stackoverflow.com/questions/53479668/how-to-make-2-clients-connect-each-other-directly-after-having-both-connected-a
@@ -30,8 +29,10 @@ def udp_client(addr):
             print('Received data from server')
             peer = bytes_to_addr(data)
             print('Peer:', *peer)
-            sock.sendto(b'hello', peer)
+
+            Thread(target=sock.sendto, args=(b'hello', peer)).start()
             data, addr = sock.recvfrom(1024)
+
             print('{}:{} says {}'.format(*addr, data))
         print('Closed socket')
     except Exception as ex:

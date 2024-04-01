@@ -7,6 +7,8 @@
 import sys
 import PyQt5.QtWidgets
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtCore import QDir
 
 sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
 from utils import gui_utils
@@ -29,15 +31,39 @@ class FileSpace():
     
     # Should be passed as list of length 4
     def add_item(self, item):
-        self._model.appendRow([QStandardItem(str(cell)) for cell in enumerate(item)])
+        self._model.appendRow([QStandardItem(str(cell)) for cell in item])
 
     def set_host_status(self, text):
         self._host_status.setText(text)
 
     def get_sync_button(self):
         return self._sync_button
+    
+    def init_host_files(self):
+        directory = QFileDialog.getExistingDirectory(None, "Select Directory")
+        if directory is not None:
+            self.populate_file_table(directory)
 
-    def init_ui(self, data):
+    def populate_file_table(self, directory):
+        self._model.clear()
+        self._model.setHorizontalHeaderLabels(["Filename", "Likes", "Dislikes", "Comments"])
+
+        dir = QDir(directory)
+        dir.setFilter(QDir.Files | QDir.NoDotAndDotDot)
+        files = dir.entryList()
+
+        for file in files:
+            self.add_item([file, '0', '0', '0'])
+        self.set_col_widths()
+
+    def set_col_widths(self):
+        # Set column widths
+        self._file_table.setColumnWidth(0, 400)  # Filenames
+        self._file_table.setColumnWidth(1, 70)   # Likes
+        self._file_table.setColumnWidth(2, 70)   # Dislikes
+        self._file_table.setColumnWidth(3, 70)   # Comments
+
+    def init_ui(self, data = None):
         # Add Widgets
         self._layout.addWidget(self._file_table, 0, 0, 1, 2)
         self._layout.addWidget(self._host_status, 1, 0)
@@ -57,10 +83,7 @@ class FileSpace():
         self._file_table.setSelectionBehavior(PyQt5.QtWidgets.QTableView.SelectRows)
         self._file_table.setEditTriggers(PyQt5.QtWidgets.QAbstractItemView.NoEditTriggers)
         # Set column widths
-        self._file_table.setColumnWidth(0, 400)  # Filenames
-        self._file_table.setColumnWidth(1, 70)   # Likes
-        self._file_table.setColumnWidth(2, 70)   # Dislikes
-        self._file_table.setColumnWidth(3, 70)   # Comments
+        self.set_col_widths()
 
         # Host status       
         self._host_status.setText('Host is offline')

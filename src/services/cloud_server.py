@@ -11,6 +11,7 @@ import os
 import struct
 import params
 import time
+from threading import Thread
 
 #------------------------------------------------------------------
 # From stack overflow: https://stackoverflow.com/questions/53479668/how-to-make-2-clients-connect-each-other-directly-after-having-both-connected-a
@@ -35,42 +36,44 @@ def udp_server(sock: socket.socket):
             return
     print('Address swap complete')
 
-def open_host(sock: socket.socket):
-    # Receives port suggestion from host, opens that port to facilitate p2p
-    try:
-        p2p_port, host = sock.recvfrom(4)
-        p2p_port = int.from_bytes(p2p_port, 'big')
-        print('Received P2P port: {} from host at: {}:{}'.format(p2p_port, *host))
-    except Exception as ex:
-            print(sys.argv[0] + ":", ex, file=sys.stderr)
-            return
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_sock:
-            print('Opened server socket')
-            if os.name != 'nt':
-                server_sock.setsockopt(socket.SOL_SOCKET,
-                                    socket.SO_REUSEADDR, 1)
-            server_sock.bind(('0.0.0.0', p2p_port))
-            print('Bound server socket to port at: {}:{}'.format(*server_sock.getsockname()))
-            udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
-        print('Closed server socket')
+def open_host(p2p_port):
+    while(True):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_sock:
+                print('Opened server socket')
+                if os.name != 'nt':
+                    server_sock.setsockopt(socket.SOL_SOCKET,
+                                        socket.SO_REUSEADDR, 1)
+                server_sock.bind(('0.0.0.0', p2p_port))
+                print('Bound server socket to port at: {}:{}'.format(*server_sock.getsockname()))
+                udp_server(server_sock) # For UDP protocol, no need to socket.listen / accept
+            print('Closed server socket')
 
-    except Exception as ex:
-        print(sys.argv[0] + ":", ex, file=sys.stderr)
-        sys.exit(1)
+        except Exception as ex:
+            print(sys.argv[0] + ":", ex, file=sys.stderr)
+            sys.exit(1)
 
 def main():
     # Starts cloud server. Listens on params.PORT for new hosts
     while(True):
         try:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as server_sock:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as cloud_sock:
                 print('Initialized cloud listening socket')
                 if os.name != 'nt':
-                    server_sock.setsockopt(socket.SOL_SOCKET,
+                    cloud_sock.setsockopt(socket.SOL_SOCKET,
                                         socket.SO_REUSEADDR, 1)
-                server_sock.bind(('0.0.0.0', params.PORT))
-                print('Bound cloud listening socket to port at: {}:{}'.format(*server_sock.getsockname()))
-                open_host(server_sock)
+                cloud_sock.bind(('0.0.0.0', params.PORT))
+                print('Bound cloud listening socket to port at: {}:{}'.format(*cloud_sock.getsockname()))
+    # Receives port suggestion from host, opens that port to facilitate p2p
+                try:
+                    p2p_port, host = cloud_sock.recvfrom(4)
+                    p2p_port = int.from_bytes(p2p_port, 'big')
+                    print('Received P2P port: {} from host at: {}:{}'.format(p2p_port, *host))
+                except Exception as ex:
+                        print(sys.argv[0] + ":", ex, file=sys.stderr)
+                        return
+    # Starts new p2p connection thread which will remain open indefinitely
+                Thread(target=open_host, args=(p2p_port)).start()
             print('Closed cloud socket')
 
         except Exception as ex:

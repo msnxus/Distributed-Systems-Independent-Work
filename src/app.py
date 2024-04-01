@@ -68,13 +68,14 @@ def host_clicked_slot(password):
     
     host = services.host.Host((params.SERVER_IP, port))
     host._new_peer.connect(lambda args: peer_popup(host, args))
-    # Thread(target=test, args=[host]).start()
+    Thread(target=test, args=[host]).start()
     
     filespace = gui.file_space.FileSpace()
     frame = PyQt5.QtWidgets.QFrame()
     frame.setLayout(filespace.get_layout())
     _window.setCentralWidget(frame)
     _window.setWindowTitle("File Space")
+    filespace.init_host_files()
     return
 
 def peer_popup(host, client_addr):

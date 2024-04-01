@@ -17,8 +17,8 @@ import peer_to_peer
 class Client():
 
     def __init__(self, server_addr):
-        self.host = []
-        self._host_addr = peer_to_peer.get_peer_addr(server_addr)
+        connection = peer_to_peer.get_peer_addr(server_addr)
+        self._host_addr = connection #if connection was a success, still needs implementing
         return
 
 #------------------------------------------------------------------

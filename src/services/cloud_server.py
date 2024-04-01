@@ -26,9 +26,8 @@ def udp_server(sock: socket.socket):
         _, client = sock.recvfrom(1)
         print('Received confirmation from client at: {}:{}'.format(*client))
         print('Sending addresses to peers')
-        sock.sendto(bytes('hello', 'utf-8'), host)
-        sock.sendto(addr_to_bytes(client), host)
         sock.sendto(addr_to_bytes(host), client)
+        sock.sendto(addr_to_bytes(client), host)
     except Exception as ex:
             print(sys.argv[0] + ":", ex, file=sys.stderr)
             return

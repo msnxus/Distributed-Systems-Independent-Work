@@ -23,7 +23,6 @@ def bytes_to_addr(addr):
 def udp_client(addr):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            sock.bind(('', 0))
             print('Sending packet to server at: {}:{}'.format(*addr))
             sock.sendto(b'a', (addr[0], addr[1]))
             data, _ = sock.recvfrom(6) # 4 bytes for ip, 2 for port

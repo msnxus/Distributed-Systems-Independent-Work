@@ -23,6 +23,7 @@ def bytes_to_addr(addr):
 def udp_client(addr):
     try:
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+            sock.bind(('', 0))
             print('Sending packet to server at: {}:{}'.format(*addr))
             sock.sendto(b'a', (addr[0], addr[1]))
             data, _ = sock.recvfrom(6) # 4 bytes for ip, 2 for port
@@ -30,8 +31,7 @@ def udp_client(addr):
             peer = bytes_to_addr(data)
             print('Peer:', *peer)
 
-            for i in range(90):
-                Thread(target=sock.sendto, args=(b'hello', peer)).start()
+            Thread(target=sock.sendto, args=(b'hello', peer)).start()
             data, addr = sock.recvfrom(1024)
 
             print('{}:{} says {}'.format(*addr, data))

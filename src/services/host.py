@@ -34,7 +34,7 @@ class Host(QObject):
         return
     
     def add_peer(self, peer_addr, sock: socket.socket):
-        self._peers.append((peer_addr, sock))
+        self._peers.append(peer_addr)
         sock.sendto(bytes('accepted', 'utf-8'), peer_addr)
         Thread(target=self.listen_to_peer, args=[peer_addr, sock]).start()
 

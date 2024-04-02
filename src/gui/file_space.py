@@ -7,8 +7,7 @@
 import sys
 import PyQt5.QtWidgets
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QFileDialog
-from PyQt5.QtCore import QDir
+from services import file_data
 
 sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
 from utils import gui_utils
@@ -39,21 +38,14 @@ class FileSpace():
     def get_sync_button(self):
         return self._sync_button
     
-    def init_host_files(self):
-        directory = QFileDialog.getExistingDirectory(None, "Select Directory")
-        if directory is not None:
-            self.populate_file_table(directory)
-
-    def populate_file_table(self, directory):
+    def populate(self, file_data = file_data.FileData):
         self._model.clear()
         self._model.setHorizontalHeaderLabels(["Filename", "Likes", "Dislikes", "Comments"])
-
-        dir = QDir(directory)
-        dir.setFilter(QDir.Files | QDir.NoDotAndDotDot)
-        files = dir.entryList()
+        files = file_data.get_data()
 
         for file in files:
-            self.add_item([file, '0', '0', '0'])
+            self.add_item([file['name'], file['likes'], file['dislikes'], file['num_comments']])
+        
         self.set_col_widths()
 
     def set_col_widths(self):
@@ -91,7 +83,6 @@ class FileSpace():
         # Add spacers to the _layout
             # horizontal
         self._layout.addItem(gui_utils.horizontal_spacer(), 1, 0)
-        
 
 def main():
     app = PyQt5.QtWidgets.QApplication(sys.argv)

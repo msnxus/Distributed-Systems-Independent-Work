@@ -14,6 +14,7 @@ from services import params
 import services.host, services.client
 import time
 from threading import Thread
+from services import file_data
 
 #------------------------------------------------------------------
 #   Instance variables
@@ -56,6 +57,13 @@ def connect_clicked_slot(password):
 
     client = services.client.Client((params.SERVER_IP, port))
 
+    filespace = gui.file_space.FileSpace()
+    frame = PyQt5.QtWidgets.QFrame()
+    frame.setLayout(filespace.get_layout())
+    _window.setCentralWidget(frame)
+    _window.setWindowTitle("File Space")
+
+    filespace.populate(client.get_data())
     return
 
 def host_clicked_slot(password):
@@ -67,24 +75,26 @@ def host_clicked_slot(password):
     print("host with password %s, which corresponds to port %d" % (password, port))
     
     host = services.host.Host((params.SERVER_IP, port))
-    host._new_peer.connect(lambda args: peer_popup(host, args))
+    host._new_peer.connect(lambda args: peer_popup(host, args[0], args[1]))
     
     filespace = gui.file_space.FileSpace()
     frame = PyQt5.QtWidgets.QFrame()
     frame.setLayout(filespace.get_layout())
     _window.setCentralWidget(frame)
     _window.setWindowTitle("File Space")
-    filespace.init_host_files()
+
+    filespace.populate(host.get_data())
     return
 
-def peer_popup(host, client_addr):
+def peer_popup(host: services.host.Host, client_addr, sock):
     reply = QMessageBox.question(None, 'New Peer Detected', 
                             f"Do you want to add this peer: {client_addr}?",
                             QMessageBox.Yes | QMessageBox.No,
                             QMessageBox.No)
     if reply == QMessageBox.Yes:
         print("Host agreed to add peer.")
-        host.add_peer(client_addr)
+        host.add_peer(client_addr, sock)
+        print("Current peers: {}".format(host.get_peers()))
     else:
         print("Host declined to add peer.")
 

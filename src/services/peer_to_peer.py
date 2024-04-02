@@ -22,23 +22,23 @@ def bytes_to_addr(addr):
 
 def udp_client(addr):
     try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            print('Sending packet to server at: {}:{}'.format(*addr))
-            sock.sendto(b'a', (addr[0], addr[1]))
-            data, _ = sock.recvfrom(6) # 4 bytes for ip, 2 for port
-            print('Received data from server')
-            peer = bytes_to_addr(data)
-            print('Peer:', *peer)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        print('Sending packet to server at: {}:{}'.format(*addr))
+        sock.sendto(b'a', (addr[0], addr[1]))
+        data, _ = sock.recvfrom(6) # 4 bytes for ip, 2 for port
+        print('Received data from server')
+        peer = bytes_to_addr(data)
+        print('Peer:', *peer)
 
-            sock.sendto(bytes('hello', 'utf-8'), peer)
-            data, addr = sock.recvfrom(5)
-            sock.sendto(bytes('hello', 'utf-8'), peer)
-            print('{}:{} says {}'.format(*addr, data.decode('utf-8')))
-        print('Closed socket')
+        sock.sendto(bytes('hello', 'utf-8'), peer)
+        data, addr = sock.recvfrom(5)
+        sock.sendto(bytes('hello', 'utf-8'), peer)
+        print('{}:{} says {}'.format(*addr, data.decode('utf-8')))
     except Exception as ex:
          print(ex, file=sys.stderr)
+         sock.close()
          sys.exit(1)
-    return peer
+    return peer, sock
 
 def get_peer_addr(server_addr):
     # Validate server_addr
@@ -52,8 +52,8 @@ def get_peer_addr(server_addr):
     if not (isinstance(port, int) and 0 <= port <= 65535):
         raise ValueError("Port must be an integer between 0 and 65535")
     
-    peer_addr = udp_client(server_addr)
-    return peer_addr
+    peer_addr, sock = udp_client(server_addr)
+    return peer_addr, sock
 
 def main():
     parser = argparse.ArgumentParser(description=(

@@ -58,23 +58,23 @@ def main():
     while(True):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as cloud_sock:
-                print('[10004] Initialized cloud listening socket')
+                print('[CLOUD] Initialized cloud listening socket')
                 if os.name != 'nt':
                     cloud_sock.setsockopt(socket.SOL_SOCKET,
                                         socket.SO_REUSEADDR, 1)
                 cloud_sock.bind(('0.0.0.0', params.PORT))
-                print('[10004] Bound cloud listening socket to port at: {}:{}'.format(*cloud_sock.getsockname()))
+                print('[CLOUD] Bound cloud listening socket to port at: {}:{}'.format(*cloud_sock.getsockname()))
     # Receives port suggestion from host, opens that port to facilitate p2p
                 try:
                     p2p_port, host = cloud_sock.recvfrom(4)
                     p2p_port = int.from_bytes(p2p_port, 'big')
-                    print('[10004] Received P2P port: {} from host at: {}:{}'.format(p2p_port, *host))
+                    print('[CLOUD] Received P2P port: {} from host at: {}:{}'.format(p2p_port, *host))
                 except Exception as ex:
                         print(sys.argv[0] + ":", ex, file=sys.stderr)
                         return
     # Starts new p2p connection thread which will remain open indefinitely
                 Thread(target=open_host, args=[p2p_port]).start()
-            print('[10004] Closed cloud socket')
+            print('[CLOUD] Closed cloud socket')
 
         except Exception as ex:
             print(sys.argv[0] + ":", ex, file=sys.stderr)

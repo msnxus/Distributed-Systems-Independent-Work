@@ -29,8 +29,8 @@ class Host(QObject):
         self.init_cloud_server()
         print('Waiting {} seconds to send peer discovery packet'.format(params.LATENCY_BUFFER))
         time.sleep(params.LATENCY_BUFFER) # Gives server time to open the p2p port before trying to discover peers on it
-        self._data = file_data.FileData(init=True)
         Thread(target=self.search_for_peers).start()
+        self._data = file_data.FileData(init=True)
         return
     
     def add_peer(self, peer_addr, sock: socket.socket):

@@ -57,13 +57,17 @@ def connect_clicked_slot(password):
 
     client = services.client.Client((params.SERVER_IP, port))
 
-    filespace = gui.file_space.FileSpace()
-    frame = PyQt5.QtWidgets.QFrame()
-    frame.setLayout(filespace.get_layout())
-    _window.setCentralWidget(frame)
-    _window.setWindowTitle("File Space")
+    if client.successful_connection():
+        filespace = gui.file_space.FileSpace()
+        frame = PyQt5.QtWidgets.QFrame()
+        frame.setLayout(filespace.get_layout())
+        _window.setCentralWidget(frame)
+        _window.setWindowTitle("File Space")
 
-    filespace.populate(client.get_data())
+        filespace.populate(client.get_data())
+    else:
+        # Handle unsuccessful connection
+        return
     return
 
 def host_clicked_slot(password):

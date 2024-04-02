@@ -33,25 +33,30 @@ class FileData():
         if other is None: return self
         diffed = FileData()
 
-        for file in self._data:
+        for index, file in enumerate(self._data):
+            other_file = other.get_data()[index]
             diffed._data.append({'name':file['name'],
-                                       'likes':file['likes'] - other['likes'],
-                                       'dislikes':file['dislikes'] - other['dislikes'],
-                                       'num_comments':file['num_comments'] - other['num_comments'],
-                                       'comments':[comment for comment in file['comments'] if comment not in other['comments']]})
+                                       'likes':file['likes'] - other_file['likes'],
+                                       'dislikes':file['dislikes'] - other_file['dislikes'],
+                                       'num_comments':file['num_comments'] - other_file['num_comments'],
+                                       'comments':[comment for comment in file['comments'] if comment not in other_file['comments']]})
         return diffed
     
     def update(self, other):
-        if other is None: return self
+        if other is None or other.is_empty(): return self
         updated = FileData()
 
-        for file in self._data:
+        for index, file in enumerate(self._data):
+            other_file = other.get_data()[index]
             updated._data.append({'name':file['name'],
-                                       'likes':file['likes'] + other['likes'],
-                                       'dislikes':file['dislikes'] + other['dislikes'],
-                                       'num_comments':file['num_comments'] + other['num_comments'],
-                                       'comments':file['comments'] + other['comments']})
+                                       'likes':file['likes'] + other_file['likes'],
+                                       'dislikes':file['dislikes'] + other_file['dislikes'],
+                                       'num_comments':file['num_comments'] + other_file['num_comments'],
+                                       'comments':file['comments'] + other_file['comments']})
         return updated
+    
+    def is_empty(self):
+        return len(self._data) == 0
     
     def init_host_files(self):
         directory = QFileDialog.getExistingDirectory(None, "Select Directory")

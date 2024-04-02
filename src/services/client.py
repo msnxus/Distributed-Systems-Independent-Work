@@ -23,19 +23,26 @@ class Client():
         self._host_addr = host_addr #if connection was a success, still needs implementing
         self._sock = sock
         data, _ = self.recv_host()
-        if data.decode('utf-8') == 'accepted':
+        if 'accepted' in data.decode('utf-8'):
             print('Accepted by host')
             self._data = file_data.FileData()
-            self._host_data = self.sync_host()
-        else: print('Rejected by host')
-        return
+            self._host_data = None
+            self.sync_host()
+            self._success = True
+        else: 
+            print('Rejected by host')
+            sock.close()
+            self._success = False
+
+    def successful_connection(self):
+        return self._success
     
     def get_data(self):
         return self._data
     
     def recv_host(self):
         while(True):
-                data, addr = self._sock.recvfrom(1024)
+                data, addr = self._sock.recvfrom(4096)
                 if addr == self._host_addr: break
         return data, addr
     

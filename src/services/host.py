@@ -46,7 +46,7 @@ class Host(QObject):
     
     def listen_to_peer(self, peer_addr, sock: socket.socket):
         while(True):
-            data, addr = sock.recvfrom(1024)
+            data, addr = sock.recvfrom(4096)
             if addr != peer_addr: continue
             else:
                 print("Received data from peer: {}:{}".format(*peer_addr))

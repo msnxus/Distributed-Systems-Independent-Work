@@ -7,7 +7,7 @@
 import sys
 import argparse
 import socket
-sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src/services')
+# sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src/services')
 # from utils import socket_utils
 from threading import Thread
 import peer_to_peer
@@ -33,6 +33,9 @@ class Host(QObject):
         self._data = file_data.FileData(init=True)
         return
     
+    def reject_peer(self, peer_addr, sock: socket.socket):
+        sock.sendto(bytes('rejected', 'utf-8'), peer_addr)
+    
     def add_peer(self, peer_addr, sock: socket.socket):
         self._peers.append(peer_addr)
         sock.sendto(bytes('accepted', 'utf-8'), peer_addr)
@@ -50,17 +53,18 @@ class Host(QObject):
             if addr != peer_addr: continue
             else:
                 print("Received data from peer: {}:{}".format(*peer_addr))
-                self.parse_data(data)
-                self.send_data(peer_addr, sock)
+                if self.parse_data(data):
+                    self.send_data(peer_addr, sock)
                  
     def parse_data(self, data):
         try:
             sync_request = pickle.loads(data)
             print("Successfully unpickled received data")
-
             self._data = self._data.update(sync_request) # given diffed data, append to host
+            return True
         except pickle.UnpicklingError as e:
             print(f"Error unpickling received data: {e}")
+            return False
 
     def send_data(self, peer_addr, sock: socket.socket):
         try:
@@ -68,8 +72,10 @@ class Host(QObject):
             
             sock.sendto(serialized_data, peer_addr)
             print(f"Sent data to peer: {peer_addr[0]}:{peer_addr[1]}")
+            return True
         except Exception as e:
             print(f"Error sending data to peer: {e}")
+            return False
     
     def init_cloud_server(self):
         # Send cloud server suggested p2p port on its dedicated listening port

@@ -24,6 +24,7 @@ _window = None
 #   Filespace
 #------------------------------------------------------------------
 
+
 #------------------------------------------------------------------
 #   Homepage
 #------------------------------------------------------------------
@@ -101,11 +102,13 @@ def peer_popup(host: services.host.Host, client_addr, sock):
         print("Current peers: {}".format(host.get_peers()))
     else:
         print("Host declined to add peer.")
+        host.reject_peer(client_addr, sock)
 
 #------------------------------------------------------------------
 #   Main
 #------------------------------------------------------------------
 def main():
+    # Run as: PYTHONPATH='services' python3 app.py
     global _window
 
     app = PyQt5.QtWidgets.QApplication(sys.argv)

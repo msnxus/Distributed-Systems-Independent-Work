@@ -8,7 +8,7 @@ import sys
 import PyQt5.QtWidgets
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
-sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
+# sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
 from utils import gui_utils
 
 #------------------------------------------------------------------

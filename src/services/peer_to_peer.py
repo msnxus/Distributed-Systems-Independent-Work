@@ -7,7 +7,7 @@
 import sys
 import argparse
 import socket
-sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
+# sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
 # from utils import socket_utils
 from threading import Thread
 import struct
@@ -29,10 +29,11 @@ def udp_client(addr):
         print('Received data from server')
         peer = bytes_to_addr(data)
         print('Peer:', *peer)
-
+# USE CLOUD 
         sock.sendto(bytes('hello', 'utf-8'), peer)
         data, addr = sock.recvfrom(5)
         sock.sendto(bytes('hello', 'utf-8'), peer)
+
         print('{}:{} says {}'.format(*addr, data.decode('utf-8')))
     except Exception as ex:
          print(ex, file=sys.stderr)

@@ -7,7 +7,7 @@
 import sys
 import argparse
 import socket
-sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
+# sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
 # from utils import socket_utils
 from threading import Thread
 from PyQt5.QtWidgets import QFileDialog

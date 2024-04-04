@@ -22,6 +22,8 @@ import pickle
 class Host(QObject):
     _new_peer = pyqtSignal(list)
 
+    # Creates instance variables, pings cloud server to open correct P2P port
+    # Starts peer searching thread and collects filedata via user input
     def __init__(self, server_addr):
         super().__init__()
         self._peers = []
@@ -33,20 +35,26 @@ class Host(QObject):
         self._data = file_data.FileData(init=True)
         return
     
+    # Send message to peer indicating rejection
     def reject_peer(self, peer_addr, sock: socket.socket):
         sock.sendto(bytes('rejected', 'utf-8'), peer_addr)
     
+    # Send message to peer indicating acceptance, add peer + sock to list
     def add_peer(self, peer_addr, sock: socket.socket):
         self._peers.append(peer_addr)
         sock.sendto(bytes('accepted', 'utf-8'), peer_addr)
         Thread(target=self.listen_to_peer, args=[peer_addr, sock]).start()
 
+    # Get list of accepted peers
     def get_peers(self):
         return self._peers
     
+    # Get FileData
     def get_data(self):
         return self._data
     
+    # Listen to peer loop. Accepts input on peer socket, discards if addr
+    # Doesn't match expected address for that port
     def listen_to_peer(self, peer_addr, sock: socket.socket):
         while(True):
             data, addr = sock.recvfrom(4096)
@@ -55,7 +63,9 @@ class Host(QObject):
                 print("Received data from peer: {}:{}".format(*peer_addr))
                 if self.parse_data(data):
                     self.send_data(peer_addr, sock)
-                 
+    
+    # Unpickles received data, returns status of execution
+    # updates personal copy of data based on what client sent
     def parse_data(self, data):
         try:
             sync_request = pickle.loads(data)
@@ -66,6 +76,7 @@ class Host(QObject):
             print(f"Error unpickling received data: {e}")
             return False
 
+    # Sends data to client
     def send_data(self, peer_addr, sock: socket.socket):
         try:
             serialized_data = pickle.dumps(self._data)
@@ -77,6 +88,8 @@ class Host(QObject):
             print(f"Error sending data to peer: {e}")
             return False
     
+    # Sends message to cloud server on static port in order to communicate
+    # which p2p port should be opened to listen for peers on
     def init_cloud_server(self):
         # Send cloud server suggested p2p port on its dedicated listening port
         try:
@@ -87,6 +100,8 @@ class Host(QObject):
                 print(ex, file=sys.stderr)
                 sys.exit(1)
 
+    # Searches for peers using peer_to_peer module, emits signal upon new client
+    # then can accept or reject in app.py flow
     def search_for_peers(self):
             while(True):
                 try:

@@ -29,6 +29,8 @@ _window = None
 #   Homepage
 #------------------------------------------------------------------
 
+# Translates alphanumeric password into number between 10005 to 65000 inclusive
+# This is the valid port range for peer to peer connection with the Cloud Matcher
 def simple_hash(password):
     charset = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
@@ -48,6 +50,9 @@ def simple_hash(password):
     hash_value = (hash_value % range_size) + min_port
     return hash_value
 
+# Slot to handle 'join' button clicked in main menu
+# Initializes new client, connects to host session, and pulls host files into
+# filespace
 def connect_clicked_slot(password):
     try:
         port = simple_hash(password)
@@ -59,18 +64,14 @@ def connect_clicked_slot(password):
     client = services.client.Client((params.SERVER_IP, port))
 
     if client.successful_connection():
-        filespace = gui.file_space.FileSpace()
-        frame = PyQt5.QtWidgets.QFrame()
-        frame.setLayout(filespace.get_layout())
-        _window.setCentralWidget(frame)
-        _window.setWindowTitle("File Space")
-
-        filespace.populate(client.get_data())
+        initialize_filespace(client.get_data())
     else:
         # Handle unsuccessful connection
         return
     return
 
+# Slot to handle 'host' button clicked in main menu
+# Initializes new host, connects to filespace, listens for peers
 def host_clicked_slot(password):
     try:
         port = simple_hash(password)
@@ -81,16 +82,23 @@ def host_clicked_slot(password):
     
     host = services.host.Host((params.SERVER_IP, port))
     host._new_peer.connect(lambda args: peer_popup(host, args[0], args[1]))
-    
+    initialize_filespace(host.get_data())
+    return
+
+# Sets up new filespace based on the given data, and displays it in the window
+# Connects filespace doubleclicked slot
+def initialize_filespace(file_data: file_data.FileData):
     filespace = gui.file_space.FileSpace()
     frame = PyQt5.QtWidgets.QFrame()
     frame.setLayout(filespace.get_layout())
     _window.setCentralWidget(frame)
     _window.setWindowTitle("File Space")
 
-    filespace.populate(host.get_data())
-    return
+    filespace.populate(file_data)
+    #filespace.on_clicked_file.connect(CONNECT TO A FUNCTION)
 
+# Supplies a popup window asking if a host will accept a peer. If yes, adds to
+# hosts list of peers.
 def peer_popup(host: services.host.Host, client_addr, sock):
     reply = QMessageBox.question(None, 'New Peer Detected', 
                             f"Do you want to add this peer: {client_addr}?",

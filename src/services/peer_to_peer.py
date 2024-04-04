@@ -20,8 +20,13 @@ def addr_to_bytes(addr):
 def bytes_to_addr(addr):
     return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
 
+# Connects to Cloud Matcher, sends packet to alert of its existence. Cloud Matcher
+# Will respond with peers addresses. Peers break NAT and say hello to each other.
 def udp_client(addr):
     try:
+        # Client is assigned port number in some valid range by their NAT
+        # provider (this range is unknown to anyone else). By communicating with
+        # Cloud, we learn what this valid port / NAT assignment is and use it
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         print('Sending packet to server at: {}:{}'.format(*addr))
         sock.sendto(b'a', (addr[0], addr[1]))
@@ -29,7 +34,13 @@ def udp_client(addr):
         print('Received data from server')
         peer = bytes_to_addr(data)
         print('Peer:', *peer)
-# USE CLOUD 
+
+        # Once we know opens ports, execute NAT breaking protocol:
+        # 1) A ----> B, dropped by B's firewall. A now is open to B.
+        # 2) B ----> A, B is now open to A
+        # 3) A receives B's message
+        # 4) A ----> B
+        # 5) B receives A's message
         sock.sendto(bytes('hello', 'utf-8'), peer)
         data, addr = sock.recvfrom(5)
         sock.sendto(bytes('hello', 'utf-8'), peer)
@@ -41,6 +52,7 @@ def udp_client(addr):
          sys.exit(1)
     return peer, sock
 
+# Ensures proper arguments and runs udp client
 def get_peer_addr(server_addr):
     # Validate server_addr
     if not isinstance(server_addr, tuple) or len(server_addr) != 2:

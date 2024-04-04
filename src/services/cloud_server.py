@@ -21,6 +21,8 @@ def addr_to_bytes(addr):
 def bytes_to_addr(addr):
     return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
 
+# On the specified port, waits for input from two users (first is host, second client)
+# Sends addresses to each other then closes
 def udp_server(p2p_port, sock: socket.socket):
     try:
         _, host = sock.recvfrom(1)
@@ -36,6 +38,8 @@ def udp_server(p2p_port, sock: socket.socket):
             return
     print('[{}] Address swap complete'.format(p2p_port))
 
+# Opens port specified by host via password. Continues to listen for peer matching
+# on that port infinitely
 def open_host(p2p_port):
     while(True):
         try:

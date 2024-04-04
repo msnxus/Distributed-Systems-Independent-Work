@@ -17,7 +17,7 @@ from PyQt5.QtCore import QObject, pyqtSignal
 SYNC_BUTTON_TEXT = "Sync"
 
 class FileSpace(QObject):
-    _clicked_file = pyqtSignal(QStandardItem)
+    on_clicked_file = pyqtSignal(QStandardItem)
 
     # Initialize SQLite database connection and retrieve data
     def __init__(self, data=None):
@@ -35,7 +35,7 @@ class FileSpace(QObject):
         return self._file_table
     
     def handle_table_double_clicked(self, item):
-        self._clicked_file.emit(item)
+        self.on_clicked_file.emit(item)
     
     # Should be passed as list of length 4
     def add_item(self, item):
@@ -83,7 +83,7 @@ class FileSpace(QObject):
         self._file_table.setSortingEnabled(True)
         self._file_table.setSelectionBehavior(PyQt5.QtWidgets.QTableView.SelectRows)
         self._file_table.setEditTriggers(PyQt5.QtWidgets.QAbstractItemView.NoEditTriggers)
-        self._file_table.doubleClicked.connect(lambda: self.handle_table_double_clicked())
+        self._file_table.doubleClicked.connect(self.handle_table_double_clicked)
         # Set column widths
         self.set_col_widths()
 

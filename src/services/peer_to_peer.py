@@ -7,18 +7,11 @@
 import sys
 import argparse
 import socket
-# sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
-# from utils import socket_utils
+from utils.socket_utils import bytes_to_addr
 from threading import Thread
 import struct
 
 #------------------------------------------------------------------
-# From stack overflow: https://stackoverflow.com/questions/53479668/how-to-make-2-clients-connect-each-other-directly-after-having-both-connected-a
-def addr_to_bytes(addr):
-    return socket.inet_aton(addr[0]) + struct.pack('H', addr[1])
-
-def bytes_to_addr(addr):
-    return (socket.inet_ntoa(addr[:4]), struct.unpack('H', addr[4:])[0])
 
 # Connects to Cloud Matcher, sends packet to alert of its existence. Cloud Matcher
 # Will respond with peers addresses. Peers break NAT and say hello to each other.

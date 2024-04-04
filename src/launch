@@ -1,2 +1,2 @@
 #!/bin/bash
-PYTHONPATH=".:services" python3 $*
+PYTHONPATH=".:services:utils" python3 $*

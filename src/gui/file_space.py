@@ -8,8 +8,6 @@ import sys
 import PyQt5.QtWidgets
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from services import file_data
-
-# sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
 from utils import gui_utils
 from PyQt5.QtCore import QObject, pyqtSignal
 

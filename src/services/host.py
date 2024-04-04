@@ -7,8 +7,6 @@
 import sys
 import argparse
 import socket
-# sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src/services')
-# from utils import socket_utils
 from threading import Thread
 import peer_to_peer
 from PyQt5.QtCore import QObject, pyqtSignal
@@ -18,9 +16,20 @@ import file_data
 import pickle
 
 #------------------------------------------------------------------
-
 class Host(QObject):
     _new_peer = pyqtSignal(list)
+
+    # Get list of accepted peers
+    def get_peers(self):
+        return self._peers
+    
+    # Get FileData
+    def get_data(self):
+        return self._data
+
+#------------------------------------------------------------------
+#   Initialization
+#------------------------------------------------------------------
 
     # Creates instance variables, pings cloud server to open correct P2P port
     # Starts peer searching thread and collects filedata via user input
@@ -34,60 +43,7 @@ class Host(QObject):
         Thread(target=self.search_for_peers).start()
         self._data = file_data.FileData(init=True)
         return
-    
-    # Send message to peer indicating rejection
-    def reject_peer(self, peer_addr, sock: socket.socket):
-        sock.sendto(bytes('rejected', 'utf-8'), peer_addr)
-    
-    # Send message to peer indicating acceptance, add peer + sock to list
-    def add_peer(self, peer_addr, sock: socket.socket):
-        self._peers.append(peer_addr)
-        sock.sendto(bytes('accepted', 'utf-8'), peer_addr)
-        Thread(target=self.listen_to_peer, args=[peer_addr, sock]).start()
 
-    # Get list of accepted peers
-    def get_peers(self):
-        return self._peers
-    
-    # Get FileData
-    def get_data(self):
-        return self._data
-    
-    # Listen to peer loop. Accepts input on peer socket, discards if addr
-    # Doesn't match expected address for that port
-    def listen_to_peer(self, peer_addr, sock: socket.socket):
-        while(True):
-            data, addr = sock.recvfrom(4096)
-            if addr != peer_addr: continue
-            else:
-                print("Received data from peer: {}:{}".format(*peer_addr))
-                if self.parse_data(data):
-                    self.send_data(peer_addr, sock)
-    
-    # Unpickles received data, returns status of execution
-    # updates personal copy of data based on what client sent
-    def parse_data(self, data):
-        try:
-            sync_request = pickle.loads(data)
-            print("Successfully unpickled received data")
-            self._data = self._data.update(sync_request) # given diffed data, append to host
-            return True
-        except pickle.UnpicklingError as e:
-            print(f"Error unpickling received data: {e}")
-            return False
-
-    # Sends data to client
-    def send_data(self, peer_addr, sock: socket.socket):
-        try:
-            serialized_data = pickle.dumps(self._data)
-            
-            sock.sendto(serialized_data, peer_addr)
-            print(f"Sent data to peer: {peer_addr[0]}:{peer_addr[1]}")
-            return True
-        except Exception as e:
-            print(f"Error sending data to peer: {e}")
-            return False
-    
     # Sends message to cloud server on static port in order to communicate
     # which p2p port should be opened to listen for peers on
     def init_cloud_server(self):
@@ -100,6 +56,10 @@ class Host(QObject):
                 print(ex, file=sys.stderr)
                 sys.exit(1)
 
+#------------------------------------------------------------------
+#   Peer matching THREAD
+#------------------------------------------------------------------
+
     # Searches for peers using peer_to_peer module, emits signal upon new client
     # then can accept or reject in app.py flow
     def search_for_peers(self):
@@ -110,5 +70,51 @@ class Host(QObject):
                     time.sleep(params.LATENCY_BUFFER) # Gives server time to reopen peer discovery port
                 except Exception as ex:
                     print(ex, file=sys.stderr)
+    
+    # Send message to peer indicating rejection
+    def reject_peer(self, peer_addr, sock: socket.socket):
+        sock.sendto(bytes('rejected', 'utf-8'), peer_addr)
+    
+    # Send message to peer indicating acceptance, add peer + sock to list
+    def add_peer(self, peer_addr, sock: socket.socket):
+        self._peers.append(peer_addr)
+        sock.sendto(bytes('accepted', 'utf-8'), peer_addr)
+        Thread(target=self.sync_with_peer, args=[peer_addr, sock]).start()
+
+#------------------------------------------------------------------
+#   Peer data syncing THREAD
+#------------------------------------------------------------------
+    
+    # Listen to peer loop. Accepts input on peer socket, discards if addr
+    # Doesn't match expected address for that port
+    def sync_with_peer(self, peer_addr, sock: socket.socket):
+        while(True):
+            data, addr = sock.recvfrom(4096)
+            if addr != peer_addr: continue
+            else:
+                print("Received data from peer: {}:{}".format(*peer_addr))
+                sync_request = self.load_file_data_from_client(data)
+                if sync_request is not None:
+                    self._data = self._data.update(sync_request) # given diffed data, append to host
+                    self.send_file_data(peer_addr, sock) # send back the updated copy to client
+    
+    # Unpickles received data, and returns it if possible
+    def load_file_data_from_client(self, data):
+        try:
+            sync_request = pickle.loads(data)
+            print("Successfully unpickled received data")
+            return sync_request
+        except pickle.UnpicklingError as e:
+            print(f"Error unpickling received data: {e}")
+            return None
+
+    # Sends file data to client
+    def send_file_data(self, peer_addr, sock: socket.socket):
+        try:
+            serialized_data = pickle.dumps(self._data)
+            sock.sendto(serialized_data, peer_addr)
+            print(f"Sent data to peer: {peer_addr[0]}:{peer_addr[1]}")
+        except Exception as e:
+            print(f"Error sending data to peer: {e}")
 
 #------------------------------------------------------------------

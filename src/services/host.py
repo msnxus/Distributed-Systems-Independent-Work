@@ -10,6 +10,8 @@ import socket
 from threading import Thread
 import peer_to_peer
 from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtCore import QDir
+from PyQt5.QtWidgets import QFileDialog
 import params
 import time
 import file_data
@@ -26,6 +28,14 @@ class Host(QObject):
     # Get FileData
     def get_data(self):
         return self._data
+    
+    # Get comments for a file
+    def get_comments(self, filename):
+        for f in self._data.get_data(): # This project is incredibly humbling.
+            if f['name'] == filename:
+                comments = f['comments']
+                break
+        return comments
 
 #------------------------------------------------------------------
 #   Initialization
@@ -36,12 +46,15 @@ class Host(QObject):
     def __init__(self, server_addr):
         super().__init__()
         self._peers = []
+        self._liked = {}
+        self._disliked = {}
         self._server_addr = server_addr
         self.init_cloud_server()
         print('Waiting {} seconds to send peer discovery packet'.format(params.LATENCY_BUFFER))
         time.sleep(params.LATENCY_BUFFER) # Gives server time to open the p2p port before trying to discover peers on it
         Thread(target=self.search_for_peers).start()
-        self._data = file_data.FileData(init=True)
+        self._dir = QFileDialog.getExistingDirectory(None, "Select Directory")
+        self._data = file_data.FileData(self._dir, init=True)
         return
 
     # Sends message to cloud server on static port in order to communicate
@@ -55,6 +68,30 @@ class Host(QObject):
         except Exception as ex:
                 print(ex, file=sys.stderr)
                 sys.exit(1)
+
+    def is_liked(self, filename): return False if filename not in self._liked else self._liked[filename]
+    def is_disliked(self, filename): return False if filename not in self._disliked else self._disliked[filename] 
+    
+    def add_like(self, filename):
+        if filename not in self._liked or self._liked[filename] == False:
+            self._liked[filename] = True
+            self._data.like(filename)
+        
+        else:
+            self._liked[filename] = False
+            self._data.unlike(filename)
+        
+    def add_dislike(self, filename):
+        if filename not in self._disliked or self._disliked[filename] == False:
+            self._disliked[filename] = True
+            self._data.dislike(filename)
+        
+        else:
+            self._disliked[filename] = False
+            self._data.undislike(filename)
+
+    def add_comment(self, filename, comment_text):
+        self._data.comment("Host", filename, comment_text)
 
 #------------------------------------------------------------------
 #   Peer matching THREAD
@@ -79,24 +116,69 @@ class Host(QObject):
     def add_peer(self, peer_addr, sock: socket.socket):
         self._peers.append(peer_addr)
         sock.sendto(bytes('accepted', 'utf-8'), peer_addr)
-        Thread(target=self.sync_with_peer, args=[peer_addr, sock]).start()
+        Thread(target=self.listen_peer, args=[peer_addr, sock]).start()
 
 #------------------------------------------------------------------
-#   Peer data syncing THREAD
+#   Peer listening THREAD
 #------------------------------------------------------------------
+
+    def listen_peer(self, peer_addr, sock: socket.socket):
+        while(True):
+            data, addr = sock.recvfrom(4)
+            if addr != peer_addr: continue
+            print("Examining request from peer: {}:{}".format(*peer_addr))
     
-    # Listen to peer loop. Accepts input on peer socket, discards if addr
+            if data == params.SYNC_REQUEST:
+                print('File sync requested')
+                self.sync_with_peer(peer_addr, sock)
+
+            elif data == params.DOWNLOAD_REQUEST:
+                print('Download requested')
+                self.upload_to_peer(peer_addr, sock)
+
+            else:
+                print('Unrecognized request type: {}'.format(data))
+
+#------------------------------------------------------------------
+#   Peer file download
+#------------------------------------------------------------------
+
+    # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
+    def upload_to_peer(self, peer_addr, sock: socket.socket):
+        buf = 1024
+        # get filename and strip:
+        data,addr = sock.recvfrom(buf)
+        file_name = data.strip('**__$$')
+        print("Request for file:",file_name)
+
+        file_path = QDir(self._dir + file_name.decode())
+        # Send the file to the peer
+        f=open(file_path,"rb") # PROBABLY need directory being used
+        data = f.read(buf)
+
+        sock.sendto(data, peer_addr)
+        while (data):
+            if(sock.sendto(data, peer_addr)):
+                print("sending ...")
+                data = f.read(buf)
+        print('Finished send')
+        f.close()
+
+#------------------------------------------------------------------
+#   Peer data syncing
+#------------------------------------------------------------------
+
+    # sync with peer. Accepts input on peer socket, discards if addr
     # Doesn't match expected address for that port
     def sync_with_peer(self, peer_addr, sock: socket.socket):
-        while(True):
             data, addr = sock.recvfrom(4096)
-            if addr != peer_addr: continue
-            else:
-                print("Received data from peer: {}:{}".format(*peer_addr))
-                sync_request = self.load_file_data_from_client(data)
-                if sync_request is not None:
-                    self._data = self._data.update(sync_request) # given diffed data, append to host
-                    self.send_file_data(peer_addr, sock) # send back the updated copy to client
+            if addr != peer_addr: 
+                    print('Error: Unrecognized peer tried to send file sync data')
+                    return
+            sync_request = self.load_file_data_from_client(data)
+            if sync_request is not None:
+                self._data = self._data.update(sync_request) # given diffed data, append to host
+                self.send_file_data(peer_addr, sock) # send back the updated copy to client
     
     # Unpickles received data, and returns it if possible
     def load_file_data_from_client(self, data):

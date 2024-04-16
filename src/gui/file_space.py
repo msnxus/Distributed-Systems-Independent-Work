@@ -10,6 +10,7 @@ from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from services import file_data
 from utils import gui_utils
 from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtWidgets import QHeaderView
 
 #------------------------------------------------------------------
 SYNC_BUTTON_TEXT = "Sync"
@@ -19,9 +20,11 @@ class FileSpace(QObject):
 
     # Initialize SQLite database connection and retrieve data
     def __init__(self, data=None):
+        super().__init__()
         self._layout = PyQt5.QtWidgets.QGridLayout()
         self._file_table = PyQt5.QtWidgets.QTableView()
         self._host_status = PyQt5.QtWidgets.QLabel()
+        self._ref_data = None
         self._sync_button = PyQt5.QtWidgets.QPushButton(SYNC_BUTTON_TEXT)
         self._model = QStandardItemModel()
         self.init_ui(data)
@@ -32,8 +35,8 @@ class FileSpace(QObject):
     def get_table(self):
         return self._file_table
     
-    def handle_table_double_clicked(self, item):
-        self.on_clicked_file.emit(item)
+    def get_model(self):
+        return self._model
     
     # Should be passed as list of length 4
     def add_item(self, item):
@@ -49,6 +52,7 @@ class FileSpace(QObject):
         self._model.clear()
         self._model.setHorizontalHeaderLabels(["Filename", "Likes", "Dislikes", "Comments"])
         files = file_data.get_data()
+        self._ref_data = files
 
         for file in files:
             self.add_item([file['name'], file['likes'], file['dislikes'], file['num_comments']])
@@ -57,10 +61,10 @@ class FileSpace(QObject):
 
     def set_col_widths(self):
         # Set column widths
-        self._file_table.setColumnWidth(0, 400)  # Filenames
-        self._file_table.setColumnWidth(1, 70)   # Likes
-        self._file_table.setColumnWidth(2, 70)   # Dislikes
-        self._file_table.setColumnWidth(3, 70)   # Comments
+        self._file_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
+        self._file_table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        self._file_table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        self._file_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeToContents)
 
     def init_ui(self, data = None):
         # Add Widgets
@@ -81,7 +85,6 @@ class FileSpace(QObject):
         self._file_table.setSortingEnabled(True)
         self._file_table.setSelectionBehavior(PyQt5.QtWidgets.QTableView.SelectRows)
         self._file_table.setEditTriggers(PyQt5.QtWidgets.QAbstractItemView.NoEditTriggers)
-        self._file_table.doubleClicked.connect(self.handle_table_double_clicked)
         # Set column widths
         self.set_col_widths()
 

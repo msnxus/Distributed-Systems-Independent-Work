@@ -10,19 +10,119 @@ from PyQt5.QtWidgets import QMessageBox
 import sys
 import gui.homepage
 import gui.file_space
+import gui.file_viewer
 from services import params
 import services.host, services.client
 import time
 from threading import Thread
 from services import file_data
+from PyQt5.QtWidgets import QProgressDialog
+from PyQt5.QtCore import QTimer
+from PyQt5.QtWidgets import QDialog, QLineEdit
 
 #------------------------------------------------------------------
 #   Instance variables
 #------------------------------------------------------------------
 _window = None
+_filespace = None
+user = None
+
+def is_host():
+    return user.isinstance(services.host.Host)
+
 #------------------------------------------------------------------
-#   Filespace
+#   File Viewer
 #------------------------------------------------------------------
+def initialize_fileviewer(index,
+                          file_data: file_data.FileData):
+    global user
+    global _filespace
+
+    i = index.sibling(index.row(), 0)
+    filename = _filespace.get_model().data(i)
+                                        
+    for f in file_data.get_data():
+        if f['name'] == filename:
+            file = f
+
+    fileviewer = gui.file_viewer.FileViewer(file, user.is_liked(file["name"]), user.is_disliked(file["name"]))
+
+    fileviewer.get_download_button().clicked.connect(
+        lambda: handle_download(fileviewer.get_filename()))
+    
+    fileviewer.get_like_button().clicked.connect(
+        lambda: handle_like(fileviewer.get_filename()))
+    
+    fileviewer.get_dislike_button().clicked.connect(
+        lambda: handle_dislike(fileviewer.get_filename()))
+    
+    fileviewer.get_post_button().clicked.connect(
+        lambda: handle_comment(fileviewer, fileviewer.get_comment_input()))
+
+    # Create a QDialog to act as a window
+    window = QDialog(parent=_window)
+    window.resize(_window.size())
+    window.setWindowTitle("File Viewer")
+    
+    window.setLayout(fileviewer.get_layout())
+    
+    # Show the window
+    window.show()
+    return window  # keep it alive?
+
+def handle_download(filename):
+    if is_host:
+        print("Can't download as host")
+    else:
+        user.download_from_host(filename)
+
+def handle_like(filename):
+    global _filespace
+    user.add_like(filename)
+    _filespace.populate(user.get_data())
+
+def handle_dislike(filename):
+    global _filespace
+    user.add_dislike(filename)
+    _filespace.populate(user.get_data())
+
+def handle_comment(fileviewer: gui.file_viewer.FileViewer, comment_text_input: QLineEdit):
+    global _filespace
+    comment_text = comment_text_input.text()
+    comment_text_input.clear()
+
+    if comment_text != '':
+        user.add_comment(fileviewer.get_filename(), comment_text)
+        _filespace.populate(user.get_data())
+        fileviewer.populate(user.get_comments(fileviewer.get_filename()))
+        print("Added comment to {}".format(fileviewer.get_filename()))
+    
+
+#------------------------------------------------------------------
+#   File Space
+#------------------------------------------------------------------
+
+# Sets up new filespace based on the given data, and displays it in the window
+# Connects filespace doubleclicked slot
+def initialize_filespace(file_data: file_data.FileData):
+    global _filespace
+    _filespace = gui.file_space.FileSpace()
+    frame = PyQt5.QtWidgets.QFrame()
+    frame.setLayout(_filespace.get_layout())
+    _window.setCentralWidget(frame)
+    _window.setWindowTitle("File Space")
+
+    _filespace.populate(file_data)
+
+    _filespace.get_table().clicked.connect(lambda index: initialize_fileviewer(index, file_data))
+
+    _filespace.get_sync_button().clicked.connect(handle_sync)
+
+def handle_sync():
+    if is_host:
+        print("Can't sync as host")
+    else:
+        user.sync_host()
 
 
 #------------------------------------------------------------------
@@ -53,26 +153,30 @@ def simple_hash(password):
 # Slot to handle 'join' button clicked in main menu
 # Initializes new client, connects to host session, and pulls host files into
 # filespace
-def connect_clicked_slot(password):
+def client_clicked_slot(password):
+    global user
     try:
         port = simple_hash(password)
     except Exception as ex:
         print(ex)
         return
     print("connect with password %s, which corresponds to port %d" % (password, port))
-
+    
     client = services.client.Client((params.SERVER_IP, port))
 
     if client.successful_connection():
         initialize_filespace(client.get_data())
+        user = client
     else:
         # Handle unsuccessful connection
+        client_rejected(password)
         return
     return
 
 # Slot to handle 'host' button clicked in main menu
 # Initializes new host, connects to filespace, listens for peers
 def host_clicked_slot(password):
+    global user
     try:
         port = simple_hash(password)
     except Exception as ex:
@@ -81,21 +185,10 @@ def host_clicked_slot(password):
     print("host with password %s, which corresponds to port %d" % (password, port))
     
     host = services.host.Host((params.SERVER_IP, port))
+    user = host
     host._new_peer.connect(lambda args: peer_popup(host, args[0], args[1]))
     initialize_filespace(host.get_data())
     return
-
-# Sets up new filespace based on the given data, and displays it in the window
-# Connects filespace doubleclicked slot
-def initialize_filespace(file_data: file_data.FileData):
-    filespace = gui.file_space.FileSpace()
-    frame = PyQt5.QtWidgets.QFrame()
-    frame.setLayout(filespace.get_layout())
-    _window.setCentralWidget(frame)
-    _window.setWindowTitle("File Space")
-
-    filespace.populate(file_data)
-    #filespace.on_clicked_file.connect(CONNECT TO A FUNCTION)
 
 # Supplies a popup window asking if a host will accept a peer. If yes, adds to
 # hosts list of peers.
@@ -107,10 +200,14 @@ def peer_popup(host: services.host.Host, client_addr, sock):
     if reply == QMessageBox.Yes:
         print("Host agreed to add peer.")
         host.add_peer(client_addr, sock)
-        print("Current peers: {}".format(host.get_peers()))
     else:
         print("Host declined to add peer.")
         host.reject_peer(client_addr, sock)
+
+def client_rejected(password: str):
+    QMessageBox.critical(None, 'Connection Rejected', 
+                         f"Host with password: {password} has rejected the connection request.",
+                         QMessageBox.Ok)
 
 #------------------------------------------------------------------
 #   Main
@@ -126,7 +223,7 @@ def main():
     # Setup homepage + connect buttons to slots
     homepage = gui.homepage.HomePage()
     homepage.get_connect_button().clicked.connect(
-        lambda: connect_clicked_slot(homepage.get_connect_text()))    
+        lambda: client_clicked_slot(homepage.get_connect_text()))    
     homepage.get_host_button().clicked.connect(
         lambda: host_clicked_slot(homepage.get_host_text()))
 

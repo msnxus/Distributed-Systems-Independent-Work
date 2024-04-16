@@ -9,20 +9,59 @@ import argparse
 import socket
 import file_data
 from threading import Thread
-from PyQt5.QtWidgets import QFileDialog
 from PyQt5.QtCore import QDir
 
 #------------------------------------------------------------------
 class FileData():
 
-    def __init__(self, init=False):
+    def __init__(self, dir:QDir = None, init=False):
         self._data = []
-        if init: self.init_host_files()
+        if init:
+            self.init_host_files(dir)
         return
+    
+    def like(self, filename):
+        for file in self._data:
+            if file["name"] == filename:
+                file["likes"] += 1
+                break
+        print("Added like to {}".format(filename))
+
+    def unlike(self, filename):
+        for file in self._data:
+            if file["name"] == filename:
+                file["likes"] -= 1
+                break
+        print("Removed like from {}".format(filename))
+
+    def dislike(self, filename):
+        for file in self._data:
+            if file["name"] == filename:
+                file["dislikes"] += 1
+                break
+        print("Added dislike to {}".format(filename))
+    
+    def undislike(self, filename):
+        for file in self._data:
+            if file["name"] == filename:
+                file["dislikes"] -= 1
+                break
+        print("Removed dislike from {}".format(filename))
+
+    def comment(self, user_id, filename, comment_text):
+        for file in self._data:
+            if file["name"] == filename:
+                file["num_comments"] += 1
+                file["comments"].append((user_id, comment_text))
+                break
+
     
     # Return a deep copy of the data in file_data
     def get_data(self):
         return self._data.copy()
+    
+    def get_comments(self):
+        return self._data.copy()['comments']
     
     # Return a deep copy of the file_data object
     def clone(self):
@@ -66,8 +105,7 @@ class FileData():
     
     # Prompt host for a directory, fill in files based on existing files in this
     # Directory (Not including other directories)
-    def init_host_files(self):
-        directory = QFileDialog.getExistingDirectory(None, "Select Directory")
+    def init_host_files(self, directory):
         if directory is not None:
             dir = QDir(directory)
             dir.setFilter(QDir.Files | QDir.NoDotAndDotDot)
@@ -79,7 +117,6 @@ class FileData():
                                        'dislikes':0,
                                        'num_comments':0,
                                        'comments':[]})
-
             
 
 

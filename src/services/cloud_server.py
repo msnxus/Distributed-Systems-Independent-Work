@@ -12,9 +12,10 @@ import struct
 import params
 import time
 from threading import Thread
-from utils.socket_utils import addr_to_bytes
 
 #------------------------------------------------------------------
+def addr_to_bytes(addr):
+    return socket.inet_aton(addr[0]) + struct.pack('H', addr[1])
 
 # On the specified port, waits for input from two users (first is host, second client)
 # Sends addresses to each other then closes

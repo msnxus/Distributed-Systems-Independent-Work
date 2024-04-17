@@ -51,15 +51,14 @@ class Client():
     def attempt_connection(self):
         wait = 10
         try:
-            while(True):
-                self._sock.settimeout(wait)
-                data, _ = self.recv_host()
-                if 'accepted' in data.decode('utf-8'):
-                    print('Accepted by host')
-                    return True
-                elif 'rejected' in data.decode('utf-8'): 
-                    print('Rejected by host')
-                    return False
+            self._sock.settimeout(wait)
+            data, _ = self.recv_host()
+            if 'accepted' in data.decode('utf-8'):
+                print('Accepted by host')
+                return True
+            elif 'rejected' in data.decode('utf-8'): 
+                print('Rejected by host')
+                return False
         except TimeoutError:
             print('Connection request timed out after {} seconds'.format(wait))
             return False

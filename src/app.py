@@ -123,7 +123,7 @@ def handle_sync():
         print("Can't sync as host")
     else:
         user.sync_host()
-
+    _filespace.populate(user.get_data())
 
 #------------------------------------------------------------------
 #   Homepage

@@ -28,7 +28,7 @@ _filespace = None
 user = None
 
 def is_host():
-    return user.isinstance(services.host.Host)
+    return isinstance(user, services.host.Host)
 
 #------------------------------------------------------------------
 #   File Viewer
@@ -71,7 +71,7 @@ def initialize_fileviewer(index,
     return window  # keep it alive?
 
 def handle_download(filename):
-    if is_host:
+    if is_host():
         print("Can't download as host")
     else:
         user.download_from_host(filename)
@@ -119,7 +119,7 @@ def initialize_filespace(file_data: file_data.FileData):
     _filespace.get_sync_button().clicked.connect(handle_sync)
 
 def handle_sync():
-    if is_host:
+    if is_host():
         print("Can't sync as host")
     else:
         user.sync_host()

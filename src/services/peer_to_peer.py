@@ -10,6 +10,7 @@ import socket
 from utils.socket_utils import bytes_to_addr
 from threading import Thread
 import struct
+import time
 
 #------------------------------------------------------------------
 
@@ -34,6 +35,7 @@ def udp_client(addr):
         # 3) A receives B's message
         # 4) A ----> B
         # 5) B receives A's message
+        time.sleep(0.5)
         sock.sendto(bytes('hello', 'utf-8'), peer)
         data, addr = sock.recvfrom(5)
         sock.sendto(bytes('hello', 'utf-8'), peer)

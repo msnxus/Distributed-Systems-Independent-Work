@@ -9,6 +9,7 @@ import argparse
 import socket
 import file_data
 from threading import Thread
+from copy import deepcopy
 from PyQt5.QtCore import QDir
 
 #------------------------------------------------------------------
@@ -66,7 +67,7 @@ class FileData():
     # Return a deep copy of the file_data object
     def clone(self):
         ret = FileData()
-        ret._data = self._data.copy()
+        ret._data = deepcopy(self._data)
         return ret
     
     # Return a file_data object which is only the different entries in this

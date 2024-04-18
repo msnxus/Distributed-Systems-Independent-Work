@@ -89,7 +89,7 @@ class FileData():
     
     # Return a file_data object which is a concatanation of entries in this
     # file_data with another
-    def update(self, other: file_data.FileData):
+    def update(self, other: file_data):
         if other is None or other.is_empty(): return self
         updated = FileData()
 

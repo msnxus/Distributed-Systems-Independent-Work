@@ -77,16 +77,19 @@ class FileData():
 
         for index, file in enumerate(self._data):
             other_file = other.get_data()[index]
+            file_comments = file['comments']
+            other_file_comments_set = set(other_file['comments'])
+            unique_comments = [comment for comment in file_comments if comment not in other_file_comments_set]
             diffed._data.append({'name':file['name'],
                                        'likes':file['likes'] - other_file['likes'],
                                        'dislikes':file['dislikes'] - other_file['dislikes'],
                                        'num_comments':file['num_comments'] - other_file['num_comments'],
-                                       'comments':[comment for comment in file['comments'] if comment not in other_file['comments']]})
+                                       'comments':unique_comments})
         return diffed
     
     # Return a file_data object which is a concatanation of entries in this
     # file_data with another
-    def update(self, other: file_data):
+    def update(self, other: file_data.FileData):
         if other is None or other.is_empty(): return self
         updated = FileData()
 

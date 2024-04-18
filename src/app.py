@@ -114,7 +114,7 @@ def initialize_filespace(file_data: file_data.FileData):
 
     _filespace.populate(file_data)
 
-    _filespace.get_table().clicked.connect(lambda index: initialize_fileviewer(index, file_data))
+    _filespace.get_table().clicked.connect(lambda index: initialize_fileviewer(index, user.get_data()))
 
     _filespace.get_sync_button().clicked.connect(handle_sync)
 

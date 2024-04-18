@@ -108,7 +108,7 @@ class Client():
     def download_from_host(self, file_name: str):
         self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
         time.sleep(0.5)
-        self._sock.sendto(bytes(file_name + "**__$$"), self._host_addr)
+        self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
 
         buf=1024
         s = self._sock

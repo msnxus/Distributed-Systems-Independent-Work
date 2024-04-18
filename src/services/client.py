@@ -42,7 +42,7 @@ class Client():
     
     # Get comments for a file
     def get_comments(self, filename):
-        for f in self.get_data():
+        for f in self._data.get_data():
             if f['name'] == filename:
                 comments = f['comments']
                 break

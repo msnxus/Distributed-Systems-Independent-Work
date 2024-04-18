@@ -148,7 +148,7 @@ class Host(QObject):
         buf = 1024
         # get filename and strip:
         data,addr = sock.recvfrom(buf)
-        file_name = data.strip('**__$$')
+        file_name = bytes(data, encoding='utf-8').strip('**__$$')
         print("Request for file:",file_name)
 
         file_path = QDir(self._dir + file_name.decode())

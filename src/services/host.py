@@ -16,6 +16,7 @@ import params
 import time
 import file_data
 import pickle
+import subprocess
 
 #------------------------------------------------------------------
 class Host(QObject):
@@ -36,6 +37,9 @@ class Host(QObject):
                 comments = f['comments']
                 break
         return comments
+    
+    def get_dir(self):
+        return self._dir
 
 #------------------------------------------------------------------
 #   Initialization
@@ -136,8 +140,38 @@ class Host(QObject):
                 print('Download requested')
                 self.upload_to_peer(peer_addr, sock)
 
+            elif data == params.STREAM_REQUEST:
+                print('Stream requested')
+                # get filename and strip:
+                data,addr = sock.recvfrom(1024)
+                file_name = data.strip('**__$$'.encode())
+                print("Request for file:",file_name.decode())
+
+                src = self._dir + '/' + file_name # absolute filepath
+
+                self.stream_video_with_ffmpeg(src, peer_addr)
+
             else:
                 print('Unrecognized request type: {}'.format(data))
+
+#------------------------------------------------------------------
+#   Peer file streaming
+#------------------------------------------------------------------
+
+    def stream_video_with_ffmpeg(source_filename, peer_addr):
+        target_ip = peer_addr[0]
+        target_port = peer_addr[1]
+
+        command = [
+            'ffmpeg',
+            '-re',  # Read input at native frame rate. Mainly used for simulation.
+            '-i', source_filename,  # Input file
+            '-c:v', 'libx264',  # Use the H.264 video codec
+            '-f', 'mpegts',  # Use MPEG-TS format suitable for streaming
+            f'udp://{target_ip}:{target_port}'  # Output to UDP
+        ]
+        subprocess.run(command)
+
 
 #------------------------------------------------------------------
 #   Peer file download
@@ -149,14 +183,12 @@ class Host(QObject):
         # get filename and strip:
         data,addr = sock.recvfrom(buf)
         file_name = data.strip('**__$$'.encode())
-        print("Request for file:",file_name)
+        print("Request for file:",file_name.decode())
 
-        file_path = QDir(self._dir + file_name.decode())
+        file_path = self._dir + '/' + file_name.decode()
         # Send the file to the peer
         f=open(file_path,"rb") # PROBABLY need directory being used
         data = f.read(buf)
-
-        sock.sendto(data, peer_addr)
         while (data):
             if(sock.sendto(data, peer_addr)):
                 print("sending ...")

@@ -8,6 +8,9 @@ import sys
 import PyQt5.QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
+from PyQt5.QtMultimediaWidgets import QVideoWidget
+
 
 # sys.path.append('/Users/ryanfhoffman/Downloads/COS IW/src')
 # from utils import gui_utils
@@ -26,12 +29,14 @@ def horizontal_spacer():
 
 class FileViewer():
     # Initialize SQLite database connection and retrieve data
-    def __init__(self, file, like_checked = False, dislike_checked = False):
+    def __init__(self, file, ishost = False, filepath = None, like_checked = False, dislike_checked = False):
         self._file = file
         self._layout = PyQt5.QtWidgets.QGridLayout()
         self._file_display = PyQt5.QtWidgets.QWidget()              # FILE VIEWING WIDGET?
         self._file_name = PyQt5.QtWidgets.QLabel(file['name'])
         self._comments_section = PyQt5.QtWidgets.QTableView()
+        self._comments_section.setMinimumHeight(200)
+
         self._like_button = PyQt5.QtWidgets.QPushButton(LIKE_TEXT)
         self._like_button.setCheckable(True)
         if like_checked:
@@ -48,12 +53,15 @@ class FileViewer():
         self._dislike_button.setStyleSheet("QPushButton:checked { background-color: green; color: white; }"
                                   "QPushButton { background-color: grey; color: black; }")
         self._dislike_button.clicked.connect(self.toggle_dislike_button)
+
+
         self._download_button = PyQt5.QtWidgets.QPushButton(DOWNLOAD_TEXT)
         self._comment_input = PyQt5.QtWidgets.QLineEdit()
         self._post_button = PyQt5.QtWidgets.QPushButton(POST_TEXT)
         self._model = QStandardItemModel()
         self.init_ui(file)
-        self.init_file_display()
+
+        self.init_file_display(ishost, filepath)
 
     def toggle_like_button(self):
         if self._like_button.isChecked():
@@ -67,23 +75,39 @@ class FileViewer():
         else:
             self._dislike_button.setText(DISLIKE_TEXT)
     
-    def init_file_display(self):
-        options = FILE_OPTIONS
-        
-        filetype = None
-        if len(self._file["name"].split('.')) >= 2:
-            filetype = self._file["name"].split('.')[1]
+    def init_file_display(self, ishost: bool = False, filepath = None):
+            options = FILE_OPTIONS
+    
+            filetype = None
+            if '.' in self._file["name"]:
+                filetype = self._file["name"].split('.')[-1].lower()
 
-        if filetype not in options or filetype is None:
-                        # File type invalid for display, show rejection message
-            message = f"Files of type: \'.{filetype}\' can't be displayed"
-            self._file_display = PyQt5.QtWidgets.QLabel(message)
-            self._file_display.setAlignment(Qt.AlignCenter)
-        else:
-            # DISPLAY FILES!
-            print('display file')
-        
-        self._layout.addWidget(self._file_display, 0, 0, 1, 4)
+            if filetype in {'mp4', 'mov'}:
+                from PyQt5.QtCore import QUrl
+                
+                # Initialize QVideoWidget and QMediaPlayer
+                self._video_widget = QVideoWidget()
+                self._video_widget.setMinimumSize(640, 480)  # Set a reasonable default size
+
+                self._player = QMediaPlayer()
+                self._player.setVideoOutput(self._video_widget)
+                
+                if ishost:
+                    self._player.setMedia(QMediaContent(QUrl.fromLocalFile(filepath)))
+                else:
+                    self._player.setMedia(QMediaContent(QUrl("udp://@127.0.0.1:" + str(filepath))))
+                
+                # Here you can insert the FFmpeg subprocess or similar setup for streaming
+                
+                self._layout.addWidget(self._video_widget, 0, 0, 1, 4)
+                # self._video_widget.show()
+                self._player.play()  # Start playing automatically
+                
+            else:
+                message = f"Files of type: \'.{filetype}\' can't be displayed"
+                self._file_display = PyQt5.QtWidgets.QLabel(message)
+                self._file_display.setAlignment(Qt.AlignCenter)
+                self._layout.addWidget(self._file_display, 0, 0, 1, 4)
     
     def get_layout(self):
         return self._layout

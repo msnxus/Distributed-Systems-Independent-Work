@@ -45,7 +45,13 @@ def initialize_fileviewer(index,
         if f['name'] == filename:
             file = f
 
-    fileviewer = gui.file_viewer.FileViewer(file, user.is_liked(file["name"]), user.is_disliked(file["name"]))
+    filepath = None
+    if is_host():
+        filepath = user.get_dir() + '/' + file['name']
+    else:
+        filepath = user.get_client_port()
+        
+    fileviewer = gui.file_viewer.FileViewer(file, is_host(), filepath, user.is_liked(file["name"]), user.is_disliked(file["name"]))
 
     fileviewer.get_download_button().clicked.connect(
         lambda: handle_download(fileviewer.get_filename()))

@@ -15,6 +15,7 @@ import peer_to_peer
 import params
 import time
 import pickle
+import subprocess
 import file_data # CANT BE FOUND NORMALLY
 
 #------------------------------------------------------------------
@@ -33,6 +34,9 @@ class Client():
 
         if self.successful_connection: self.sync_host()
         else: self._sock.close()
+
+    def get_client_port(self):
+        return self._sock.getsockname()[1]
 
     def successful_connection(self):
         return self._success
@@ -125,6 +129,29 @@ class Client():
             f.close()
             print("File Downloaded")
 
+    def stream_from_host(self, file_name: str):
+        target_port = self._sock.getsockname()[1]
+
+        self._sock.sendto(params.STREAM_REQUEST, self._host_addr)
+        time.sleep(0.5)
+        self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
+        time.sleep(0.5)
+        self.receive_and_play_video(target_port)
+        
+
+#------------------------------------------------------------------
+#   Peer file streaming
+#------------------------------------------------------------------
+
+    def receive_and_play_video(self, target_port):
+        command = [
+            'ffplay',  # FFmpeg's media player utility
+            '-i', f'udp://@:{target_port}',  # Input from UDP
+            '-bufsize', '65535',  # Set buffer size
+            '-infbuf',  # No buffer size limit, useful for live streams
+            '-sync', 'video'  # Sync to video if audio is not present or important
+        ]
+        subprocess.run(command)
 
 
 #------------------------------------------------------------------

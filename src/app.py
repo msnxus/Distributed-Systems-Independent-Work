@@ -50,7 +50,8 @@ def initialize_fileviewer(index,
         filepath = user.get_dir() + '/' + file['name']
     else:
         filepath = user.get_client_port()
-        
+        user.stream_from_host(file['name'])
+    
     fileviewer = gui.file_viewer.FileViewer(file, is_host(), filepath, user.is_liked(file["name"]), user.is_disliked(file["name"]))
 
     fileviewer.get_download_button().clicked.connect(

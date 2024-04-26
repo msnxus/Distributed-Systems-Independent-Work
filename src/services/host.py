@@ -147,7 +147,7 @@ class Host(QObject):
                 file_name = data.strip('**__$$'.encode())
                 print("Request for file:",file_name.decode())
 
-                src = self._dir + '/' + file_name # absolute filepath
+                src = self._dir + '/' + file_name.decode() # absolute filepath
 
                 self.stream_video_with_ffmpeg(src, peer_addr)
 
@@ -158,9 +158,7 @@ class Host(QObject):
 #   Peer file streaming
 #------------------------------------------------------------------
 
-    def stream_video_with_ffmpeg(source_filename, peer_addr):
-        target_ip = peer_addr[0]
-        target_port = peer_addr[1]
+    def stream_video_with_ffmpeg(source_filename, target_ip, target_port):
 
         command = [
             'ffmpeg',

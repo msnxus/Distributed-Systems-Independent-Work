@@ -228,7 +228,7 @@ class Host(QObject):
                     if total_sent >= file_size:
                         print("File fully sent.")
                         break
-                    sock.recvfrom(0)
+                    sock.recvfrom(1)
 
         except FileNotFoundError:
             print(f"File {file_name.decode()} not found in directory {self._dir}.", file=sys.stderr)

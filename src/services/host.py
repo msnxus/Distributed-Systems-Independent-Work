@@ -185,18 +185,18 @@ class Host(QObject):
 
         file_path = self._dir + '/' + file_name.decode()
         try:
+            start_time = time.time()
             with open(file_path, "rb") as f:
                 # Get file size
                 file_size = os.path.getsize(file_path)
                 total_sent = 0
-
                 data = f.read(buf)
                 while data:
                     sent = sock.sendto(data, peer_addr)
                     total_sent += sent
                     print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)
-
+                    #time.sleep(0.002)
                     # Optionally, check if total_sent matches file_size to stop sending
                     if total_sent >= file_size:
                         print("File fully sent.")
@@ -208,7 +208,10 @@ class Host(QObject):
             print('Failed to send', file=sys.stderr)
             print(e, file=sys.stderr)
         else:
+            end_time = time.time()  # End timing
+            elapsed_time = end_time - start_time
             print('Finished sending')
+            print(f"Time elapsed: {elapsed_time:.2f} seconds")
 
 #------------------------------------------------------------------
 #   Peer data syncing

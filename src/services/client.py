@@ -161,6 +161,7 @@ class Client():
             # Create a listening socket
             listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             listener.bind(('0.0.0.0', portUsed))
             listener.listen()
             print('[TCP] Listening for host on: {}:{}'.format(*listener.getsockname()))
@@ -168,6 +169,7 @@ class Client():
             # Create a connecting socket
             connector = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             connector.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            connector.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             connector.bind(('0.0.0.0', portUsed))  # Bind to the same local port
 
             # Start the connection attempt in a separate thread

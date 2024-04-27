@@ -114,7 +114,13 @@ class Client():
 
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def download_from_host(self, file_name: str):
+        self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
+        print('Sent download request to host')
+        time.sleep(0.5)  # Giving the server time to process the request
+        self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
+        f = open(file_name, 'wb')
         multiprocessing.Process(target=self.dwlnd,args=[file_name]).start()
+        multiprocessing.Process(target=self.write_from_q,args=[f]).start()
 
     def write_from_q(self, file):
         try:
@@ -125,14 +131,7 @@ class Client():
             print('Finished writing from queue on timeout and closed file')
 
     def dwlnd(self, file_name:str):
-        self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
-        print('Sent download request to host')
-        time.sleep(0.5)  # Giving the server time to process the request
-        self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
-
         buf = 1024
-        f = open(file_name, 'wb')
-
         time.sleep(1)  # Give the host time to be first to the server request
         tcp_sock = self.tcp_holepunch()
         bs = tcp_sock.recv(8)
@@ -141,7 +140,6 @@ class Client():
         try:
             tcp_sock.settimeout(5)  # Initial timeout for receiving the first packet
             received = 0
-            multiprocessing.Process(target=self.write_from_q,args=[f]).start()
             while received < length:
                 data = tcp_sock.recv(buf)
                 received += len(data)

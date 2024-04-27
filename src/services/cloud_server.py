@@ -94,7 +94,7 @@ def main():
                         print(sys.argv[0] + ":", ex, file=sys.stderr)
                         return
     # Starts new p2p connection thread which will remain open indefinitely
-                if p2p_port == params.TCP_PORT: tcp_server()
+                if p2p_port == params.TCP_PORT: Thread(target=tcp_server).start()
                 else: Thread(target=open_host, args=[p2p_port]).start()
                 # Thread(target=open_host, args=[p2p_port]).start()
             print('[CLOUD] Closed cloud socket')

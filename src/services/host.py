@@ -191,6 +191,7 @@ class Host(QObject):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, linger)
             print('[TCP] Connecting to server at: {}:{}'.format(*addr))
             sock.connect(addr)
+            print('[TCP] Sent address to server')
             portUsed = sock.getsockname()[1]
             data = sock.recv(6) # 4 bytes for ip, 2 for port
             print('[TCP] Received data from server')
@@ -202,7 +203,7 @@ class Host(QObject):
             sock2.bind(('0.0.0.0', portUsed))
             sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             print('[TCP] Connecting to peer at: {}:{}'.format(*peer))
-            time.sleep(0.5)
+            time.sleep(params.LATENCY_BUFFER)
             sock2.connect(peer)
         except Exception as ex:
             print(ex, file=sys.stderr)

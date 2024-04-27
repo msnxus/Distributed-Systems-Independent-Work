@@ -29,10 +29,12 @@ def tcp_server():
                 sock_host, host = server_sock.accept()
                 print('[{}] Accepted connection from host at: {}:{}'.format(p, *host))
                 server_sock.listen()
-                _, client = server_sock.accept()
+                sock_client, client = server_sock.accept()
                 print('[{}] Received confirmation from client at: {}:{}'.format(p, *client))
                 print('[{}] Sending client address: {}:{} to host'.format(p, *client))
                 sock_host.send(addr_to_bytes(client))
+                print('[{}] Sending host address: {}:{} to client'.format(p, *host))
+                sock_client.send(addr_to_bytes(host))
             except Exception as ex:
                     print(sys.argv[0] + ":", ex, file=sys.stderr)
                     return

@@ -152,6 +152,10 @@ class Client():
             sock.connect(addr)
             portUsed = sock.getsockname()[1]
             print('[TCP] Sent address to server')
+            data = sock.recv(6) # 4 bytes for ip, 2 for port
+            print('[TCP] Received data from server')
+            host = bytes_to_addr(data)
+            print('[TCP] Host:', *host)
             sock.close()
             time.sleep(params.LATENCY_BUFFER)
             sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -159,6 +163,14 @@ class Client():
             sock2.bind(('0.0.0.0', portUsed))
             print('[TCP] Listening for host on: {}:{}'.format(*sock2.getsockname()))
             sock2.listen()
+            sock2.setblocking(0)  # Set non-blocking mode
+            try:
+                sock2.connect(host)
+            except socket.error as e:
+                if e.errno == socket.errno.EINPROGRESS:
+                    print('[TCP] Connecting in progress...')
+                else:
+                    raise e
             tcp_sock, host = sock2.accept()
             print('[TCP] Host:', *host)
 

@@ -223,12 +223,11 @@ class Host(QObject):
                     total_sent += sent
                     print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)
-                    #time.sleep(0.05)
+                    time.sleep(0.01)
                     # Optionally, check if total_sent matches file_size to stop sending
                     if total_sent >= file_size:
                         print("File fully sent.")
                         break
-                    sock.recvfrom(1)
 
         except FileNotFoundError:
             print(f"File {file_name.decode()} not found in directory {self._dir}.", file=sys.stderr)

@@ -177,7 +177,7 @@ class Host(QObject):
 
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def upload_to_peer(self, peer_addr, sock: socket.socket):
-        buf = 16384
+        buf = 1024
         # get filename and strip:
         data,addr = sock.recvfrom(buf)
         file_name = data.strip('**__$$'.encode())
@@ -188,9 +188,14 @@ class Host(QObject):
         f=open(file_path,"rb") # PROBABLY need directory being used
         data = f.read(buf)
         while (data):
-            if(sock.sendto(data, peer_addr)):
-                print("sending ...")
-                data = f.read(buf)
+            try:
+                if(sock.sendto(data, peer_addr)):
+                    print("sending ...")
+                    data = f.read(buf)
+            except Exception as e:
+                print('Failed send')
+                print(e, file=sys.stderr)
+                return
         print('Finished send')
         f.close()
 

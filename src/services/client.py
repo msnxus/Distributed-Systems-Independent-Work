@@ -96,8 +96,8 @@ class Client():
         try:
             diffed = self._data.diff(self._host_data)
             serialized_data = pickle.dumps(diffed)
-            
             self._sock.sendto(params.SYNC_REQUEST, self._host_addr)
+            print('Sent sync request to host')
             time.sleep(0.5)
             self._sock.sendto(serialized_data, self._host_addr)
             print(f"Sent data to host: {self._host_addr[0]}:{self._host_addr[1]}")
@@ -111,10 +111,11 @@ class Client():
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def download_from_host(self, file_name: str):
         self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
+        print('Sent download request to host')
         time.sleep(0.5)
         self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
 
-        buf=32768
+        buf=16384
         s = self._sock
 
         f = open(file_name,'wb')

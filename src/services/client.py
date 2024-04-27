@@ -147,9 +147,14 @@ class Client():
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             print('[TCP] Connecting to server at: {}:{}'.format(*addr))
             sock.connect(addr)
+            portUsed = sock.getsockname()[1]
             print('[TCP] Sent address to server')
-            sock.listen()
-            tcp_sock, host = sock.accept()
+
+            sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock2.bind(('0.0.0.0', portUsed))
+            sock2.listen()
+            tcp_sock, host = sock2.accept()
             print('[TCP] Host:', *host)
 
             time.sleep(0.5)

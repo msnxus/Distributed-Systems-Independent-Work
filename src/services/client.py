@@ -112,6 +112,9 @@ class Client():
 
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def download_from_host(self, file_name: str):
+        Thread(target=self.dwlnd,args=[file_name]).start()
+
+    def dwlnd(self, file_name:str):
         self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
         print('Sent download request to host')
         time.sleep(0.5)  # Giving the server time to process the request
@@ -128,7 +131,7 @@ class Client():
             while True:
                 data = tcp_sock.recv(buf)
                 f.write(data)
-                tcp_sock.settimeout(2)  # Reset timeout after each packet received
+                tcp_sock.settimeout(3)  # Reset timeout after each packet received
         except socket.timeout:
             print("Timeout reached, no more data.")
         except socket.error as e:

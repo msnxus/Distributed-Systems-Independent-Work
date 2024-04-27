@@ -45,7 +45,7 @@ def tcp_server():
                     while True:
                         data = sock_host.recv(buf)
                         sock_client.sendall(data)
-                        sock_host.settimeout(2)  # Reset timeout after each packet received
+                        sock_host.settimeout(3)  # Reset timeout after each packet received
                 except socket.timeout:
                     print("Timeout reached, no more data.")
                 except socket.error as e:

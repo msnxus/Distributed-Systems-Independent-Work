@@ -135,7 +135,7 @@ class Client():
                 data = tcp_sock.recv(buf)
                 received += len(data)
                 f.write(data)
-                tcp_sock.settimeout(5)
+                tcp_sock.settimeout(20)
         except socket.timeout:
             print("Timeout reached, no more data.")
         except socket.error as e:

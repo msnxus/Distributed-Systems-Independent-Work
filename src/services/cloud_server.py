@@ -50,7 +50,7 @@ def tcp_server():
                         data = sock_host.recv(buf)
                         sent += len(data)
                         sock_client.sendall(data)
-                        sock_host.settimeout(5)
+                        sock_host.settimeout(20)
                 except socket.timeout:
                     print("Timeout reached, no more data.")
                 except socket.error as e:

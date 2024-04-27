@@ -12,12 +12,12 @@ import socket
 from threading import Thread
 import struct
 import peer_to_peer
+from utils.socket_utils import bytes_to_addr
 import params
 import time
 import pickle
 import subprocess
 import file_data # CANT BE FOUND NORMALLY
-import queue
 
 #------------------------------------------------------------------
 class Client():
@@ -30,7 +30,6 @@ class Client():
         self._host_data = None
         self._liked = {}
         self._disliked = {}
-        self._queue = queue.Queue()
 
         self._success = self.attempt_connection()
 
@@ -112,47 +111,54 @@ class Client():
 
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def download_from_host(self, file_name: str):
-        self.download_from_host(file_name)
-
-    def receiver(self):
-        try:
-            self._sock.settimeout(5)  # Initial timeout for receiving the first packet
-            while True:
-                data, addr = self._sock.recvfrom(65535)
-                if not data:
-                    break
-                self._queue.put(data)
-                self._sock.settimeout(1)  # Reset timeout after each packet received
-        except socket.timeout:
-            print("Timeout reached, no more data.")
-        except socket.error as e:
-            print(f"Socket error: {e}")
-        finally:
-            self._queue.put(None)  # Signal the writer to stop
-
-    def writer(self, file_name):
-        with open(file_name, 'wb') as f:
-            while True:
-                data = self._queue.get()
-                if data is None:
-                    break
-                f.write(data)
-        print("File downloaded or download stopped due to error.")
-
-    def download_from_host(self, file_name: str):
         self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
         print('Sent download request to host')
         time.sleep(0.5)  # Giving the server time to process the request
         self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
 
-        receiver_thread = Thread(target=self.receiver)
-        writer_thread = Thread(target=self.writer, args=(file_name,))
-        
-        receiver_thread.start()
-        writer_thread.start()
+        buf = 65535
+        f = open(file_name, 'wb')
 
-        receiver_thread.join()
-        writer_thread.join()
+        time.sleep(1)  # Give the host time to be first to the server request
+        tcp_sock = self.tcp_holepunch()
+
+        try:
+            tcp_sock.settimeout(5)  # Initial timeout for receiving the first packet
+            while True:
+                data, addr = tcp_sock.recvfrom(buf)
+                f.write(data)
+                tcp_sock.settimeout(1)  # Reset timeout after each packet received
+        except socket.timeout:
+            print("Timeout reached, no more data.")
+        except socket.error as e:
+            print(f"Socket error: {e}")
+        finally:
+            f.close()
+            tcp_sock.close()
+            print("File downloaded or download stopped due to error.")
+
+    # Connects to Cloud Matcher, sends packet to alert of its existence. Cloud Matcher
+    # Will respond with peers addresses. Peers break NAT and say hello to each other.
+    def tcp_holepunch(self):
+        addr = (params.SERVER_IP,params.TCP_PORT)
+        self.init_cloud_server(addr)
+        time.sleep(params.LATENCY_BUFFER)
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            print('[TCP] Connecting to server at: {}:{}'.format(*addr))
+            sock.connect(addr)
+            print('[TCP] Sent address to server')
+            sock.listen()
+            tcp_sock, host = sock.accept()
+            print('[TCP] Host:', *host)
+
+            time.sleep(0.5)
+        except Exception as ex:
+            print(ex, file=sys.stderr)
+            sock.close()
+            sys.exit(1)
+        return tcp_sock
 
     def stream_from_host(self, file_name: str):
         target_port = self._sock.getsockname()[1]

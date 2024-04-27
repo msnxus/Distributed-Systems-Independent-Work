@@ -177,32 +177,32 @@ class Host(QObject):
 #   Peer file download
 #------------------------------------------------------------------
 
-    # # Connects to Cloud Matcher, sends packet to alert of its existence. Cloud Matcher
-    # # Will respond with peers addresses. Peers break NAT and say hello to each other.
-    # def tcp_holepunch(self):
-    #     addr = (params.SERVER_IP,params.TCP_PORT)
-    #     self.init_cloud_server(addr)
-    #     time.sleep(params.LATENCY_BUFFER)
-    #     try:
-    #         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    #         print('[TCP] Connecting to server at: {}:{}'.format(*addr))
-    #         sock.connect(addr)
-    #         data, _ = sock.recv(6) # 4 bytes for ip, 2 for port
-    #         print('[TCP] Received data from server')
-    #         peer = bytes_to_addr(data)
-    #         print('[TCP] Peer:', *peer)
+    # Connects to Cloud Matcher, sends packet to alert of its existence. Cloud Matcher
+    # Will respond with peers addresses. Peers break NAT and say hello to each other.
+    def tcp_holepunch(self):
+        addr = (params.SERVER_IP,params.TCP_PORT)
+        self.init_cloud_server(addr)
+        time.sleep(params.LATENCY_BUFFER)
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            print('[TCP] Connecting to server at: {}:{}'.format(*addr))
+            sock.connect(addr)
+            data, _ = sock.recv(6) # 4 bytes for ip, 2 for port
+            print('[TCP] Received data from server')
+            peer = bytes_to_addr(data)
+            print('[TCP] Peer:', *peer)
 
-    #         time.sleep(0.5)
+            time.sleep(0.5)
             
-    #         print('[TCP] Connecting to peer at: {}:{}'.format(*peer))
-    #         sock.connect(peer)
-    #     except Exception as ex:
-    #         print(ex, file=sys.stderr)
-    #         sock.close()
-    #         sys.exit(1)
-    #     return peer, sock
-
+            print('[TCP] Connecting to peer at: {}:{}'.format(*peer))
+            sock.connect(peer)
+        except Exception as ex:
+            print(ex, file=sys.stderr)
+            sock.close()
+            sys.exit(1)
+        return sock
+ 
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def upload_to_peer(self, peer_addr, sock: socket.socket):
         buf = 1024
@@ -211,6 +211,8 @@ class Host(QObject):
         print("Request for file:", file_name.decode())
 
         file_path = self._dir + '/' + file_name.decode()
+
+        tcp_sock = self.tcp_holepunch()
         try:
             start_time = time.time()
             with open(file_path, "rb") as f:
@@ -219,11 +221,11 @@ class Host(QObject):
                 total_sent = 0
                 data = f.read(buf)
                 while data:
-                    sent = sock.sendto(data, peer_addr)
+                    sent = tcp_sock.sendto(data, peer_addr)
                     total_sent += sent
                     print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)
-                    time.sleep(0.01)
+                    # time.sleep(0.01)
                     # Optionally, check if total_sent matches file_size to stop sending
                     if total_sent >= file_size:
                         print("File fully sent.")
@@ -239,6 +241,8 @@ class Host(QObject):
             elapsed_time = end_time - start_time
             print('Finished sending')
             print(f"Time elapsed: {elapsed_time:.2f} seconds")
+        
+        tcp_sock.close()
 
 #------------------------------------------------------------------
 #   Peer data syncing

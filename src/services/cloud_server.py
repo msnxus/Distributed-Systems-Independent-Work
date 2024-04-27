@@ -17,27 +17,26 @@ from threading import Thread
 def addr_to_bytes(addr):
     return socket.inet_aton(addr[0]) + struct.pack('H', addr[1])
 
-# def tcp_server():
-#         p = params.TCP_PORT
-#         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock:
-#             print('[{}] Opened TCP socket'.format(p))
-#             server_sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1)
-#             server_sock.bind(('0.0.0.0', p))
-#             print('[{}] Bound TCP socket to port at: {}:{}'.format(p, *server_sock.getsockname()))
-#         try:
-#             server_sock.listen()
-#             _, host = server_sock.accept()
-#             print('[{}] Accepted connection from host at: {}:{}'.format(p, *host))
-#             server_sock.listen()
-#             _, client = server_sock.accept()
-#             print('[{}] Received confirmation from client at: {}:{}'.format(p, *client))
-#             print('[{}] Sending addresses to peers'.format(p))
-#             server_sock.sendto(addr_to_bytes(client), host)
-#             server_sock.sendto(addr_to_bytes(host), client)
-#         except Exception as ex:
-#                 print(sys.argv[0] + ":", ex, file=sys.stderr)
-#                 return
-#         print('[{}] Address swap complete'.format(p))
+def tcp_server():
+        p = params.TCP_PORT
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_sock:
+            print('[{}] Opened TCP socket'.format(p))
+            server_sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1)
+            server_sock.bind(('0.0.0.0', p))
+            print('[{}] Bound TCP socket to port at: {}:{}'.format(p, *server_sock.getsockname()))
+        try:
+            server_sock.listen()
+            sock_host, host = server_sock.accept()
+            print('[{}] Accepted connection from host at: {}:{}'.format(p, *host))
+            server_sock.listen()
+            _, client = server_sock.accept()
+            print('[{}] Received confirmation from client at: {}:{}'.format(p, *client))
+            print('[{}] Sending addresses to peers'.format(p))
+            sock_host.send(addr_to_bytes(client))
+        except Exception as ex:
+                print(sys.argv[0] + ":", ex, file=sys.stderr)
+                return
+        print('[{}] Address swap complete'.format(p))
 
 # On the specified port, waits for input from two users (first is host, second client)
 # Sends addresses to each other then closes
@@ -95,9 +94,9 @@ def main():
                         print(sys.argv[0] + ":", ex, file=sys.stderr)
                         return
     # Starts new p2p connection thread which will remain open indefinitely
-                # if p2p_port == params.TCP_PORT: tcp_server()
-                # else: Thread(target=open_host, args=[p2p_port]).start()
-                Thread(target=open_host, args=[p2p_port]).start()
+                if p2p_port == params.TCP_PORT: tcp_server()
+                else: Thread(target=open_host, args=[p2p_port]).start()
+                # Thread(target=open_host, args=[p2p_port]).start()
             print('[CLOUD] Closed cloud socket')
 
         except Exception as ex:

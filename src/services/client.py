@@ -126,6 +126,7 @@ class Client():
                 f.write(data)
                 s.settimeout(2)
                 data,addr = s.recvfrom(buf)
+                if data == b'**__$$': raise TimeoutError
         except TimeoutError:
             f.close()
             print("File Downloaded")

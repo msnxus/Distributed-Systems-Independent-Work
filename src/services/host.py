@@ -17,6 +17,7 @@ import time
 import file_data
 import pickle
 import subprocess
+import os
 
 #------------------------------------------------------------------
 class Host(QObject):
@@ -178,26 +179,37 @@ class Host(QObject):
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def upload_to_peer(self, peer_addr, sock: socket.socket):
         buf = 1024
-        # get filename and strip:
-        data,addr = sock.recvfrom(buf)
-        file_name = data.strip('**__$$'.encode())
-        print("Request for file:",file_name.decode())
+        data, addr = sock.recvfrom(buf)
+        file_name = data.strip(b'**__$$')
+        print("Request for file:", file_name.decode())
 
         file_path = self._dir + '/' + file_name.decode()
-        # Send the file to the peer
-        f=open(file_path,"rb") # PROBABLY need directory being used
-        data = f.read(buf)
-        while (data):
-            try:
-                if(sock.sendto(data, peer_addr)):
-                    print("sending ...")
+        try:
+            with open(file_path, "rb") as f:
+                # Get file size
+                file_size = os.path.getsize(file_path)
+                total_sent = 0
+
+                data = f.read(buf)
+                while data:
+                    sent = sock.sendto(data, peer_addr)
+                    total_sent += sent
+                    print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)
-            except Exception as e:
-                print('Failed send')
-                print(e, file=sys.stderr)
-                return
-        print('Finished send')
-        f.close()
+
+                    # Optionally, check if total_sent matches file_size to stop sending
+                    if total_sent >= file_size:
+                        print("File fully sent.")
+                        break
+
+        except FileNotFoundError:
+            print(f"File {file_name.decode()} not found in directory {self._dir}.", file=sys.stderr)
+        except Exception as e:
+            print('Failed to send', file=sys.stderr)
+            print(e, file=sys.stderr)
+        else:
+            print('Finished sending')
+            sock.sendto(b'**__$$', peer_addr)
 
 #------------------------------------------------------------------
 #   Peer data syncing

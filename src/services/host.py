@@ -12,6 +12,7 @@ import peer_to_peer
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtCore import QDir
 from PyQt5.QtWidgets import QFileDialog
+from utils.socket_utils import bytes_to_addr
 import params
 import time
 import file_data
@@ -54,25 +55,13 @@ class Host(QObject):
         self._liked = {}
         self._disliked = {}
         self._server_addr = server_addr
-        self.init_cloud_server()
+        self.init_cloud_server(self._server_addr)
         print('Waiting {} seconds to send peer discovery packet'.format(params.LATENCY_BUFFER))
         time.sleep(params.LATENCY_BUFFER) # Gives server time to open the p2p port before trying to discover peers on it
         Thread(target=self.search_for_peers).start()
         self._dir = QFileDialog.getExistingDirectory(None, "Select Directory")
         self._data = file_data.FileData(self._dir, init=True)
         return
-
-    # Sends message to cloud server on static port in order to communicate
-    # which p2p port should be opened to listen for peers on
-    def init_cloud_server(self):
-        # Send cloud server suggested p2p port on its dedicated listening port
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                print('Sending cloud init port to server at: {}:{}'.format(params.SERVER_IP, params.PORT))
-                sock.sendto(self._server_addr[1].to_bytes(4), (params.SERVER_IP, params.PORT))
-        except Exception as ex:
-                print(ex, file=sys.stderr)
-                sys.exit(1)
 
     def is_liked(self, filename): return False if filename not in self._liked else self._liked[filename]
     def is_disliked(self, filename): return False if filename not in self._disliked else self._disliked[filename] 
@@ -101,6 +90,18 @@ class Host(QObject):
 #------------------------------------------------------------------
 #   Peer matching THREAD
 #------------------------------------------------------------------
+
+    # Sends message to cloud server on static port in order to communicate
+    # which p2p port should be opened to listen for peers on
+    def init_cloud_server(self, addr):
+        # Send cloud server suggested p2p port on its dedicated listening port
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
+                print('Sending cloud init port to server at: {}:{}'.format(params.SERVER_IP, params.PORT))
+                sock.sendto(addr[1].to_bytes(4), (params.SERVER_IP, params.PORT))
+        except Exception as ex:
+                print(ex, file=sys.stderr)
+                sys.exit(1)
 
     # Searches for peers using peer_to_peer module, emits signal upon new client
     # then can accept or reject in app.py flow
@@ -176,6 +177,32 @@ class Host(QObject):
 #   Peer file download
 #------------------------------------------------------------------
 
+    # # Connects to Cloud Matcher, sends packet to alert of its existence. Cloud Matcher
+    # # Will respond with peers addresses. Peers break NAT and say hello to each other.
+    # def tcp_holepunch(self):
+    #     addr = (params.SERVER_IP,params.TCP_PORT)
+    #     self.init_cloud_server(addr)
+    #     time.sleep(params.LATENCY_BUFFER)
+    #     try:
+    #         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    #         print('[TCP] Connecting to server at: {}:{}'.format(*addr))
+    #         sock.connect(addr)
+    #         data, _ = sock.recv(6) # 4 bytes for ip, 2 for port
+    #         print('[TCP] Received data from server')
+    #         peer = bytes_to_addr(data)
+    #         print('[TCP] Peer:', *peer)
+
+    #         time.sleep(0.5)
+            
+    #         print('[TCP] Connecting to peer at: {}:{}'.format(*peer))
+    #         sock.connect(peer)
+    #     except Exception as ex:
+    #         print(ex, file=sys.stderr)
+    #         sock.close()
+    #         sys.exit(1)
+    #     return peer, sock
+
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def upload_to_peer(self, peer_addr, sock: socket.socket):
         buf = 1024
@@ -196,11 +223,12 @@ class Host(QObject):
                     total_sent += sent
                     print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)
-                    #time.sleep(0.002)
+                    time.sleep(0.05)
                     # Optionally, check if total_sent matches file_size to stop sending
                     if total_sent >= file_size:
                         print("File fully sent.")
                         break
+                    sock.recvfrom(0)
 
         except FileNotFoundError:
             print(f"File {file_name.decode()} not found in directory {self._dir}.", file=sys.stderr)

@@ -124,6 +124,7 @@ class Client():
                 data, addr = self._sock.recvfrom(buf)
                 f.write(data)
                 self._sock.settimeout(1)  # Reset timeout after each packet received
+                self._sock.send(b'', self._host_addr)
         except socket.timeout:
             print("Timeout reached, no more data.")
         except socket.error as e:
@@ -131,8 +132,6 @@ class Client():
         finally:
             f.close()
             print("File Downloaded or download stopped due to error.")
-
-
 
     def stream_from_host(self, file_name: str):
         target_port = self._sock.getsockname()[1]

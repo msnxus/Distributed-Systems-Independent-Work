@@ -125,14 +125,14 @@ class Client():
 
         time.sleep(1)  # Give the host time to be first to the server request
         tcp_sock = self.tcp_holepunch()
-        file_size = tcp_sock.recv(1024)
-        file_size = int.from_bytes(file_size)
-        print('Download starting for {} with file size {}'.format(file_name, file_size))
+        bs = tcp_sock.recv(8)
+        (length,) = struct.unpack('>Q', bs)
+        print('Download starting for {} with file size {}'.format(file_name, length))
         try:
             buf = 1024
             tcp_sock.settimeout(5)  # Initial timeout for receiving the first packet
             received = 0
-            while received < file_size:
+            while received < length:
                 data = tcp_sock.recv(buf)
                 received += len(data)
                 f.write(data)

@@ -227,7 +227,9 @@ class Host(QObject):
         file_path = self._dir + '/' + file_name.decode()
         file_size = os.path.getsize(file_path)
         tcp_sock = self.tcp_holepunch()
-        tcp_sock.sendall(file_size.to_bytes(byteorder='big'))
+        # use struct to make sure we have a consistent endianness on the length
+        length = struct.pack('>Q', file_size)
+        tcp_sock.sendall(length)
         try:
             start_time = time.time()
             with open(file_path, "rb") as f:

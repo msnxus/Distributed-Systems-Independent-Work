@@ -39,14 +39,14 @@ def tcp_server():
                 sock_host.send(addr_to_bytes(client))
                 print('[{}] Sending ready signal to client'.format(p))
                 sock_client.send(addr_to_bytes(host))
-                file_size = sock_host.recv(1024)
-                sock_client.send(file_size)
-                file_size = int.from_bytes(file_size)
+                bs = sock_host.recv(8)
+                sock_client.send(bs)
+                (length,) = struct.unpack('>Q', bs)
                 try:
                     buf = 65535
                     sock_host.settimeout(5)  # Initial timeout for receiving the first packet
                     sent = 0
-                    while sent < file_size:
+                    while sent < length:
                         data = sock_host.recv(buf)
                         sent += len(data)
                         sock_client.sendall(data)

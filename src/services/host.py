@@ -18,6 +18,7 @@ import time
 import file_data
 import pickle
 import subprocess
+import struct
 import os
 
 #------------------------------------------------------------------
@@ -186,6 +187,8 @@ class Host(QObject):
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            linger = struct.pack('ii', 1, 0)  # Set linger to zero
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, linger)
             print('[TCP] Connecting to server at: {}:{}'.format(*addr))
             sock.connect(addr)
             portUsed = sock.getsockname()[1]

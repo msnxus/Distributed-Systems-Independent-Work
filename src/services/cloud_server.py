@@ -40,7 +40,7 @@ def tcp_server():
                 print('[{}] Sending ready signal to client'.format(p))
                 sock_client.send(addr_to_bytes(host))
                 try:
-                    buf = 65535
+                    buf = 1024
                     sock_host.settimeout(5)  # Initial timeout for receiving the first packet
                     while True:
                         data = sock_host.recv(buf)

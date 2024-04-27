@@ -239,7 +239,7 @@ class Host(QObject):
                     total_sent += buf
                     print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)
-                    # time.sleep(0.01)
+                    time.sleep(0.001)
                     # Optionally, check if total_sent matches file_size to stop sending
                     if total_sent >= file_size:
                         print("File fully sent.")
@@ -256,7 +256,7 @@ class Host(QObject):
             print('Finished sending')
             print(f"Time elapsed: {elapsed_time:.2f} seconds")
         
-        #tcp_sock.close()
+        tcp_sock.close()
 
 #------------------------------------------------------------------
 #   Peer data syncing

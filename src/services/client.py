@@ -153,6 +153,7 @@ class Client():
             portUsed = sock.getsockname()[1]
             print('[TCP] Sent address to server')
             sock.close()
+            time.sleep(params.LATENCY_BUFFER)
             sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock2.bind(('0.0.0.0', portUsed))

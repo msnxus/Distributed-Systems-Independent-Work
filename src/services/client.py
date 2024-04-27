@@ -149,7 +149,7 @@ class Client():
             sock.connect(addr)
             portUsed = sock.getsockname()[1]
             print('[TCP] Sent address to server')
-
+            sock.close()
             sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock2.bind(('0.0.0.0', portUsed))
@@ -160,7 +160,6 @@ class Client():
             time.sleep(0.5)
         except Exception as ex:
             print(ex, file=sys.stderr)
-            sock.close()
             sys.exit(1)
         return tcp_sock
 

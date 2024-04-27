@@ -194,6 +194,7 @@ class Host(QObject):
             peer = bytes_to_addr(data)
             print('[TCP] Peer:', *peer)
             time.sleep(0.5)
+            sock.close()
             sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock2.bind(('0.0.0.0', portUsed))
             sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -201,9 +202,7 @@ class Host(QObject):
             sock2.connect(peer)
         except Exception as ex:
             print(ex, file=sys.stderr)
-            sock.close()
             sys.exit(1)
-        sock.close()
         return sock2
  
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python

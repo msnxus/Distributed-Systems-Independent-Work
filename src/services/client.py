@@ -16,7 +16,8 @@ from utils.socket_utils import bytes_to_addr
 import params
 import time
 import pickle
-import subprocess
+import multiprocessing
+import queue
 import struct
 import file_data # CANT BE FOUND NORMALLY
 
@@ -31,6 +32,7 @@ class Client():
         self._host_data = None
         self._liked = {}
         self._disliked = {}
+        self._queue = queue.Queue()
 
         self._success = self.attempt_connection()
 
@@ -112,7 +114,15 @@ class Client():
 
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def download_from_host(self, file_name: str):
-        Thread(target=self.dwlnd,args=[file_name]).start()
+        multiprocessing.Process(target=self.dwlnd,args=[file_name]).start()
+
+    def write_from_q(self, file):
+        try:
+            data = self._queue.get(block = True, timeout=20)
+            file.write(data)
+        except TimeoutError as ex:
+            file.close()
+            print('Finished writing from queue on timeout and closed file')
 
     def dwlnd(self, file_name:str):
         self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
@@ -131,10 +141,12 @@ class Client():
         try:
             tcp_sock.settimeout(5)  # Initial timeout for receiving the first packet
             received = 0
+            multiprocessing.Process(target=self.write_from_q,args=[f]).start()
             while received < length:
                 data = tcp_sock.recv(buf)
                 received += len(data)
-                f.write(data)
+                self._queue.put(data)
+
                 tcp_sock.settimeout(20)
         except socket.timeout:
             print("Timeout reached, no more data.")

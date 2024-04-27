@@ -117,18 +117,18 @@ class Client():
         time.sleep(0.5)  # Giving the server time to process the request
         self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
 
-        buf = 65535
+        buf = 4096
         f = open(file_name, 'wb')
 
         time.sleep(1)  # Give the host time to be first to the server request
         tcp_sock = self.tcp_holepunch()
-
+        print('Download starting for {}'.format(file_name))
         try:
             tcp_sock.settimeout(5)  # Initial timeout for receiving the first packet
             while True:
                 data = tcp_sock.recv(buf)
                 f.write(data)
-                tcp_sock.settimeout(1)  # Reset timeout after each packet received
+                tcp_sock.settimeout(2)  # Reset timeout after each packet received
         except socket.timeout:
             print("Timeout reached, no more data.")
         except socket.error as e:
@@ -179,6 +179,7 @@ class Client():
             tcp_sock, host_info = listener.accept()
             print('[TCP] Host:', *host_info)
             time.sleep(0.5)
+            print('Host says: {}'.format(tcp_sock.recv(5)))
             return tcp_sock
 
         except Exception as ex:
@@ -188,7 +189,7 @@ class Client():
     def punch(self, sock: socket.socket, host):
         try:
             sock.connect(host)
-            print("[TCP] Connection to host")
+            print("[TCP] Asynch connection to host complete")
         except socket.error as e:
             print(f"Failed to connect: {e}")
 

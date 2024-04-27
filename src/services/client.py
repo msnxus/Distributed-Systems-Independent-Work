@@ -114,7 +114,7 @@ class Client():
         time.sleep(0.5)
         self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
 
-        buf=65535
+        buf=32768
         s = self._sock
 
         f = open(file_name,'wb')

@@ -176,9 +176,8 @@ class Client():
             Thread(target=self.punch, args=[connector, host]).start()
 
             # Accept the incoming connection
-            tcp_sock, host_info = listener.accept()
-            print('[TCP] Host:', *host_info)
-            time.sleep(0.5)
+            tcp_sock, _ = listener.accept()
+            print('[TCP] Successful host connection')
             print('Host says: {}'.format(tcp_sock.recv(5)))
             return tcp_sock
 
@@ -189,7 +188,7 @@ class Client():
     def punch(self, sock: socket.socket, host):
         try:
             sock.connect(host)
-            print("[TCP] Asynch connection to host complete")
+            print("[TCP] Async connect() complete")
         except socket.error as e:
             print(f"Failed to connect: {e}")
 

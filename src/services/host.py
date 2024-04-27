@@ -205,7 +205,7 @@ class Host(QObject):
             listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             listener.bind(('0.0.0.0', portUsed))
             listener.listen()
-            print('[TCP] Asynch listening for peer on: {}:{}'.format(*listener.getsockname()))
+            print('[TCP] Async listening for peer')
 
             # Create a connecting socket
             connector = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -216,7 +216,8 @@ class Host(QObject):
             # Accept the incoming connection
             time.sleep(params.LATENCY_BUFFER)
             connector.connect(peer)
-            connector.send(b'Hello')
+            print('[TCP] Successful peer connection')
+            connector.sendall(b'Hello')
             return connector
 
         except Exception as ex:

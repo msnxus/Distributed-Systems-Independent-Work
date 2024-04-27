@@ -129,7 +129,6 @@ class Client():
         (length,) = struct.unpack('>Q', bs)
         print('Download starting for {} with file size {}'.format(file_name, length))
         try:
-            buf = 1024
             tcp_sock.settimeout(5)  # Initial timeout for receiving the first packet
             received = 0
             while received < length:

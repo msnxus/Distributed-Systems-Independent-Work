@@ -116,17 +116,13 @@ class Client():
         self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
 
         buf = 65535
-        write_buf = []
         f = open(file_name, 'wb')
 
         try:
             self._sock.settimeout(5)  # Initial timeout for receiving the first packet
             while True:
                 data, addr = self._sock.recvfrom(buf)
-                write_buf.append(data)
-                if len(write_buf) == 1000:
-                    Thread(f.write,args=b''.join(write_buf)).start()
-                    write_buf = []
+                f.write(data)
                 self._sock.settimeout(1)  # Reset timeout after each packet received
         except socket.timeout:
             print("Timeout reached, no more data.")

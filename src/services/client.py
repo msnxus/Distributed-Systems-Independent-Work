@@ -188,7 +188,7 @@ class Client():
     def punch(self, sock: socket.socket, host):
         try:
             sock.connect(host)
-            print("[TCP] Connected to peer")
+            print("[TCP] Connection to host")
         except socket.error as e:
             print(f"Failed to connect: {e}")
 

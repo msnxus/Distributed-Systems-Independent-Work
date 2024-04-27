@@ -199,16 +199,28 @@ class Host(QObject):
             print('[TCP] Peer:', *peer)
             sock.close()
             time.sleep(params.LATENCY_BUFFER)
-            sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock2.bind(('0.0.0.0', portUsed))
-            sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            print('[TCP] Connecting to peer at: {}:{}'.format(*peer))
+            # Create a listening socket
+            listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            listener.bind(('0.0.0.0', portUsed))
+            listener.listen()
+            print('[TCP] Listening for host on: {}:{}'.format(*listener.getsockname()))
+
+            # Create a connecting socket
+            connector = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            connector.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            connector.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            connector.bind(('0.0.0.0', portUsed))  # Bind to the same local port
+
+            # Accept the incoming connection
             time.sleep(params.LATENCY_BUFFER)
-            sock2.connect(peer)
+            connector.connect(peer)
+            return connector
+
         except Exception as ex:
             print(ex, file=sys.stderr)
             sys.exit(1)
-        return sock2
  
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def upload_to_peer(self, peer_addr, sock: socket.socket):

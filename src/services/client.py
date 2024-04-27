@@ -173,11 +173,11 @@ class Client():
             sys.exit(1)
         return tcp_sock
     
-    def punch(self, sock, host):
+    def punch(self, sock: socket.socket, host):
         try:
             sock.connect(host)
         except socket.error as e:
-            print('Host connect() call timed out: Host NAT dropped it')
+            print(e)
 
     def stream_from_host(self, file_name: str):
         target_port = self._sock.getsockname()[1]

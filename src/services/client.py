@@ -112,24 +112,27 @@ class Client():
     def download_from_host(self, file_name: str):
         self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
         print('Sent download request to host')
-        time.sleep(0.5)
+        time.sleep(0.5)  # Giving the server time to process the request
         self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
 
-        buf=16384
-        s = self._sock
+        buf = 16384
+        f = open(file_name, 'wb')
 
-        f = open(file_name,'wb')
-
-        data,addr = s.recvfrom(buf)
         try:
-            while(data):
+            self._sock.settimeout(5)  # Initial timeout for receiving the first packet
+            while True:
+                data, addr = self._sock.recvfrom(buf)
                 f.write(data)
-                s.settimeout(2)
-                data,addr = s.recvfrom(buf)
-                if data == b'**__$$': raise TimeoutError
-        except TimeoutError:
+                self._sock.settimeout(1)  # Reset timeout after each packet received
+        except socket.timeout:
+            print("Timeout reached, no more data.")
+        except socket.error as e:
+            print(f"Socket error: {e}")
+        finally:
             f.close()
-            print("File Downloaded")
+            print("File Downloaded or download stopped due to error.")
+
+
 
     def stream_from_host(self, file_name: str):
         target_port = self._sock.getsockname()[1]

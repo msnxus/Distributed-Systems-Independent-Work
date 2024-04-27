@@ -209,7 +209,6 @@ class Host(QObject):
             print(e, file=sys.stderr)
         else:
             print('Finished sending')
-            sock.sendto(b'**__$$', peer_addr)
 
 #------------------------------------------------------------------
 #   Peer data syncing

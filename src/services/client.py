@@ -17,6 +17,7 @@ import time
 import pickle
 import subprocess
 import file_data # CANT BE FOUND NORMALLY
+import queue
 
 #------------------------------------------------------------------
 class Client():
@@ -110,28 +111,48 @@ class Client():
 
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def download_from_host(self, file_name: str):
-        self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
-        print('Sent download request to host')
-        time.sleep(0.5)  # Giving the server time to process the request
-        self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
+        self._queue = queue.Queue()
+        self.download_from_host(file_name)
 
-        buf = 65535
-        f = open(file_name, 'wb')
-
+    def receiver(self):
         try:
             self._sock.settimeout(5)  # Initial timeout for receiving the first packet
             while True:
-                data, addr = self._sock.recvfrom(buf)
-                f.write(data)
+                data, addr = self._sock.recvfrom(65535)
+                if not data:
+                    break
+                self._queue.put(data)
                 self._sock.settimeout(1)  # Reset timeout after each packet received
-                self._sock.sendto(b'\x01', self._host_addr)
         except socket.timeout:
             print("Timeout reached, no more data.")
         except socket.error as e:
             print(f"Socket error: {e}")
         finally:
-            f.close()
-            print("File Downloaded or download stopped due to error.")
+            self._queue.put(None)  # Signal the writer to stop
+
+    def writer(self, file_name):
+        with open(file_name, 'wb') as f:
+            while True:
+                data = self._queue.get()
+                if data is None:
+                    break
+                f.write(data)
+        print("File downloaded or download stopped due to error.")
+
+    def download_from_host(self, file_name: str):
+        self._sock.sendto(params.DOWNLOAD_REQUEST, self._host_addr)
+        print('Sent download request to host')
+        time.sleep(0.5)  # Giving the server time to process the request
+        self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
+
+        receiver_thread = Thread(target=self.receiver)
+        writer_thread = Thread(target=self.writer, args=(file_name,))
+        
+        receiver_thread.start()
+        writer_thread.start()
+
+        receiver_thread.join()
+        writer_thread.join()
 
     def stream_from_host(self, file_name: str):
         target_port = self._sock.getsockname()[1]

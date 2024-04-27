@@ -30,6 +30,7 @@ class Client():
         self._host_data = None
         self._liked = {}
         self._disliked = {}
+        self._queue = queue.Queue()
 
         self._success = self.attempt_connection()
 
@@ -111,7 +112,6 @@ class Client():
 
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def download_from_host(self, file_name: str):
-        self._queue = queue.Queue()
         self.download_from_host(file_name)
 
     def receiver(self):

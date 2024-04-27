@@ -31,7 +31,7 @@ def tcp_server():
                 server_sock.listen()
                 _, client = server_sock.accept()
                 print('[{}] Received confirmation from client at: {}:{}'.format(p, *client))
-                print('[{}] Sending addresses to peers'.format(p))
+                print('[{}] Sending client address: {}:{} to host'.format(p, *client))
                 sock_host.send(addr_to_bytes(client))
             except Exception as ex:
                     print(sys.argv[0] + ":", ex, file=sys.stderr)

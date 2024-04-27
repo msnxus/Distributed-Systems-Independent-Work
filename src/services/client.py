@@ -125,7 +125,7 @@ class Client():
         try:
             tcp_sock.settimeout(5)  # Initial timeout for receiving the first packet
             while True:
-                data, addr = tcp_sock.recvfrom(buf)
+                data = tcp_sock.recv(buf)
                 f.write(data)
                 tcp_sock.settimeout(1)  # Reset timeout after each packet received
         except socket.timeout:

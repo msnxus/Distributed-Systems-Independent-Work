@@ -189,7 +189,7 @@ class Host(QObject):
             print('[TCP] Connecting to server at: {}:{}'.format(*addr))
             sock.connect(addr)
             portUsed = sock.getsockname()[1]
-            data, _ = sock.recv(6) # 4 bytes for ip, 2 for port
+            data = sock.recv(6) # 4 bytes for ip, 2 for port
             print('[TCP] Received data from server')
             peer = bytes_to_addr(data)
             print('[TCP] Peer:', *peer)
@@ -223,7 +223,7 @@ class Host(QObject):
                 total_sent = 0
                 data = f.read(buf)
                 while data:
-                    sent = tcp_sock.sendto(data, peer_addr)
+                    sent = tcp_sock.send(data)
                     total_sent += sent
                     print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)

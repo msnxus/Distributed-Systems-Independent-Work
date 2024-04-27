@@ -64,7 +64,7 @@ class Client():
     
     def recv_host(self):
         while(True):
-                data, addr = self._sock.recvfrom(4096)
+                data, addr = self._sock.recvfrom(16384)
                 if addr == self._host_addr: break
         return data, addr
     
@@ -101,7 +101,7 @@ class Client():
             time.sleep(0.5)
             self._sock.sendto(serialized_data, self._host_addr)
             print(f"Sent data to host: {self._host_addr[0]}:{self._host_addr[1]}")
-            data, addr = self.recv_host(2048)
+            data, addr = self.recv_host()
             print("Received data from host: {}:{}".format(*addr))
             self._data = pickle.loads(data)
             self._host_data = self._data.clone()

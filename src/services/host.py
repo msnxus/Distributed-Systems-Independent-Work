@@ -201,7 +201,7 @@ class Host(QObject):
     # sync with peer. Accepts input on peer socket, discards if addr
     # Doesn't match expected address for that port
     def sync_with_peer(self, peer_addr, sock: socket.socket):
-            data, addr = sock.recvfrom(2048)
+            data, addr = sock.recvfrom(16384)
             if addr != peer_addr: 
                     print('Error: Unrecognized peer tried to send file sync data')
                     return

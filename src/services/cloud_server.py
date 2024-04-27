@@ -24,19 +24,19 @@ def tcp_server():
             server_sock.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR, 1)
             server_sock.bind(('0.0.0.0', p))
             print('[{}] Bound TCP socket to port at: {}:{}'.format(p, *server_sock.getsockname()))
-        try:
-            server_sock.listen()
-            sock_host, host = server_sock.accept()
-            print('[{}] Accepted connection from host at: {}:{}'.format(p, *host))
-            server_sock.listen()
-            _, client = server_sock.accept()
-            print('[{}] Received confirmation from client at: {}:{}'.format(p, *client))
-            print('[{}] Sending addresses to peers'.format(p))
-            sock_host.send(addr_to_bytes(client))
-        except Exception as ex:
-                print(sys.argv[0] + ":", ex, file=sys.stderr)
-                return
-        print('[{}] Address swap complete'.format(p))
+            try:
+                server_sock.listen()
+                sock_host, host = server_sock.accept()
+                print('[{}] Accepted connection from host at: {}:{}'.format(p, *host))
+                server_sock.listen()
+                _, client = server_sock.accept()
+                print('[{}] Received confirmation from client at: {}:{}'.format(p, *client))
+                print('[{}] Sending addresses to peers'.format(p))
+                sock_host.send(addr_to_bytes(client))
+            except Exception as ex:
+                    print(sys.argv[0] + ":", ex, file=sys.stderr)
+                    return
+            print('[{}] Address swap complete'.format(p))
 
 # On the specified port, waits for input from two users (first is host, second client)
 # Sends addresses to each other then closes

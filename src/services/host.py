@@ -225,13 +225,12 @@ class Host(QObject):
         print("Request for file:", file_name.decode())
 
         file_path = self._dir + '/' + file_name.decode()
-
+        file_size = os.path.getsize(file_path)
         tcp_sock = self.tcp_holepunch()
+        tcp_sock.sendall(file_size.to_bytes(byteorder='big'))
         try:
             start_time = time.time()
             with open(file_path, "rb") as f:
-                # Get file size
-                file_size = os.path.getsize(file_path)
                 total_sent = 0
                 data = f.read(buf)
                 while data:
@@ -239,7 +238,7 @@ class Host(QObject):
                     total_sent += buf
                     print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)
-                    time.sleep(0.001)
+                    # time.sleep(0.001)
                     # Optionally, check if total_sent matches file_size to stop sending
                     if total_sent >= file_size:
                         print("File fully sent.")
@@ -255,6 +254,7 @@ class Host(QObject):
             elapsed_time = end_time - start_time
             print('Finished sending')
             print(f"Time elapsed: {elapsed_time:.2f} seconds")
+            print(tcp_sock.recv(1024).decode())
         
         tcp_sock.close()
 

@@ -39,18 +39,24 @@ def tcp_server():
                 sock_host.send(addr_to_bytes(client))
                 print('[{}] Sending ready signal to client'.format(p))
                 sock_client.send(addr_to_bytes(host))
+                file_size = sock_host.recv(1024)
+                sock_client.send(file_size)
+                file_size = int.from_bytes(file_size)
                 try:
-                    buf = 1024
+                    buf = 65535
                     sock_host.settimeout(5)  # Initial timeout for receiving the first packet
-                    while True:
+                    sent = 0
+                    while sent < file_size:
                         data = sock_host.recv(buf)
+                        sent += len(data)
                         sock_client.sendall(data)
-                        sock_host.settimeout(3)  # Reset timeout after each packet received
+                        sock_host.settimeout(5)
                 except socket.timeout:
                     print("Timeout reached, no more data.")
                 except socket.error as e:
                     print(f"Socket error: {e}")
                 finally:
+                    sock_host.sendall(b'Done')
                     sock_host.close()
                     print('[{}] Closed host socket'.format(p))
                     sock_client.close()

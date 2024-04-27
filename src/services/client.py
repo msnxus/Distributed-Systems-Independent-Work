@@ -150,36 +150,40 @@ class Client():
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, linger)
             print('[TCP] Connecting to server at: {}:{}'.format(*addr))
             sock.connect(addr)
-            portUsed = sock.getsockname()[1]
-            print('[TCP] Sent address to server')
             data = sock.recv(6) # 4 bytes for ip, 2 for port
-            print('[TCP] Received data from server')
             host = bytes_to_addr(data)
-            print('[TCP] Host:', *host)
-            sock.close()
+            print('[TCP] Received data from server. Starting receive from host: {}:{}'.format(*host))
+            return sock
+            # portUsed = sock.getsockname()[1]
+            # print('[TCP] Sent address to server')
+            # data = sock.recv(6) # 4 bytes for ip, 2 for port
+            # print('[TCP] Received data from server')
+            # host = bytes_to_addr(data)
+            # print('[TCP] Host:', *host)
+            # sock.close()
 
-            # Create a listening socket
-            listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            listener.bind(('0.0.0.0', portUsed))
-            listener.listen()
-            print('[TCP] Listening for host on: {}:{}'.format(*listener.getsockname()))
+            # # Create a listening socket
+            # listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            # listener.bind(('0.0.0.0', portUsed))
+            # listener.listen()
+            # print('[TCP] Listening for host on: {}:{}'.format(*listener.getsockname()))
 
-            # Create a connecting socket
-            connector = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            connector.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            connector.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
-            connector.bind(('0.0.0.0', portUsed))  # Bind to the same local port
+            # # Create a connecting socket
+            # connector = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # connector.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # connector.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+            # connector.bind(('0.0.0.0', portUsed))  # Bind to the same local port
 
-            # Start the connection attempt in a separate thread
-            Thread(target=self.punch, args=[connector, host]).start()
+            # # Start the connection attempt in a separate thread
+            # Thread(target=self.punch, args=[connector, host]).start()
 
-            # Accept the incoming connection
-            tcp_sock, _ = listener.accept()
-            print('[TCP] Successful host connection')
-            print('Host says: {}'.format(tcp_sock.recv(5)))
-            return tcp_sock
+            # # Accept the incoming connection
+            # tcp_sock, _ = listener.accept()
+            # print('[TCP] Successful host connection')
+            # print('Host says: {}'.format(tcp_sock.recv(5)))
+            # return tcp_sock
 
         except Exception as ex:
             print(ex, file=sys.stderr)

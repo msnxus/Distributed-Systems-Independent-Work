@@ -191,22 +191,27 @@ class Host(QObject):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_LINGER, linger)
             print('[TCP] Connecting to server at: {}:{}'.format(*addr))
             sock.connect(addr)
-            print('[TCP] Sent address to server')
-            portUsed = sock.getsockname()[1]
             data = sock.recv(6) # 4 bytes for ip, 2 for port
-            print('[TCP] Received data from server')
             peer = bytes_to_addr(data)
-            print('[TCP] Peer:', *peer)
-            sock.close()
-            time.sleep(params.LATENCY_BUFFER)
-            sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock2.bind(('0.0.0.0', portUsed))
-            sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            print('[TCP] Connecting to peer at: {}:{}'.format(*peer))
-            time.sleep(params.LATENCY_BUFFER)
-            sock2.connect(peer)
-            print('[TCP] Successful connection to peer')
-            sock2.sendall(b'Hello')
+            print('[TCP] Received data from server. Starting send to peer: {}:{}'.format(*peer))
+            return sock
+            # print('[TCP] Sent address to server')
+            # portUsed = sock.getsockname()[1]
+            # data = sock.recv(6) # 4 bytes for ip, 2 for port
+            # print('[TCP] Received data from server')
+            # peer = bytes_to_addr(data)
+            # print('[TCP] Peer:', *peer)
+            # sock.close()
+            # time.sleep(params.LATENCY_BUFFER)
+            # sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # sock2.bind(('0.0.0.0', portUsed))
+            # sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # print('[TCP] Connecting to peer at: {}:{}'.format(*peer))
+            # time.sleep(params.LATENCY_BUFFER)
+            # sock2.setblocking(True)
+            # sock2.connect(peer)
+            # print('[TCP] Successful connection to peer')
+            # sock2.sendall(b'Hello')
         except Exception as ex:
             print(ex, file=sys.stderr)
             sys.exit(1)
@@ -230,7 +235,7 @@ class Host(QObject):
                 total_sent = 0
                 data = f.read(buf)
                 while data:
-                    sent = tcp_sock.send(data)
+                    sent = tcp_sock.sendall(data)
                     total_sent += sent
                     print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)

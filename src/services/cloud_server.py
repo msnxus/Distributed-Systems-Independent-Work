@@ -31,14 +31,34 @@ def tcp_server():
                 server_sock.listen()
                 sock_client, client = server_sock.accept()
                 print('[{}] Received confirmation from client at: {}:{}'.format(p, *client))
-                print('[{}] Sending client address: {}:{} to host'.format(p, *client))
+                # print('[{}] Sending client address: {}:{} to host'.format(p, *client))
+                # sock_host.send(addr_to_bytes(client))
+                # print('[{}] Sending host address: {}:{} to client'.format(p, *host))
+                # sock_client.send(addr_to_bytes(host))
+                print('[{}] Sending ready signal to host'.format(p))
                 sock_host.send(addr_to_bytes(client))
-                print('[{}] Sending host address: {}:{} to client'.format(p, *host))
+                print('[{}] Sending ready signal to client'.format(p))
                 sock_client.send(addr_to_bytes(host))
+                try:
+                    buf = 65535
+                    sock_host.settimeout(5)  # Initial timeout for receiving the first packet
+                    while True:
+                        data = sock_host.recv(buf)
+                        sock_client.sendall(data)
+                        sock_host.settimeout(2)  # Reset timeout after each packet received
+                except socket.timeout:
+                    print("Timeout reached, no more data.")
+                except socket.error as e:
+                    print(f"Socket error: {e}")
+                finally:
+                    sock_host.close()
+                    print('[{}] Closed host socket'.format(p))
+                    sock_client.close()
+                    print('[{}] Closed client socket'.format(p))
             except Exception as ex:
                     print(sys.argv[0] + ":", ex, file=sys.stderr)
                     return
-            print('[{}] Address swap complete'.format(p))
+            # print('[{}] Address swap complete'.format(p))
         print('[{}] Closed TCP socket'.format(p))
 
 # On the specified port, waits for input from two users (first is host, second client)

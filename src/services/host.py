@@ -203,7 +203,7 @@ class Host(QObject):
             sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             print('[TCP] Connecting to peer at: {}:{}'.format(*peer))
             time.sleep(0.5)
-            sock2.connect(params.LATENCY_BUFFER)
+            sock2.connect(peer)
         except Exception as ex:
             print(ex, file=sys.stderr)
             sys.exit(1)

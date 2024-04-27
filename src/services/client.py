@@ -157,7 +157,7 @@ class Client():
             sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock2.bind(('0.0.0.0', portUsed))
-            print('[TCP] Listening for host on: {}:{}'.format(sock2.getsockname()))
+            print('[TCP] Listening for host on: {}:{}'.format(*sock2.getsockname()))
             sock2.listen()
             tcp_sock, host = sock2.accept()
             print('[TCP] Host:', *host)

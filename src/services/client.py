@@ -124,7 +124,7 @@ class Client():
                 data, addr = self._sock.recvfrom(buf)
                 f.write(data)
                 self._sock.settimeout(1)  # Reset timeout after each packet received
-                self._sock.send(b'', self._host_addr)
+                self._sock.sendto(b'', self._host_addr)
         except socket.timeout:
             print("Timeout reached, no more data.")
         except socket.error as e:

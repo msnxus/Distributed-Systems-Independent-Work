@@ -223,7 +223,7 @@ class Host(QObject):
                     total_sent += sent
                     print(f"sending {total_sent} / {file_size} bytes...")
                     data = f.read(buf)
-                    time.sleep(0.05)
+                    #time.sleep(0.05)
                     # Optionally, check if total_sent matches file_size to stop sending
                     if total_sent >= file_size:
                         print("File fully sent.")

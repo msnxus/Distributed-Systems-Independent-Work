@@ -37,6 +37,7 @@ def tcp_server():
                     print(sys.argv[0] + ":", ex, file=sys.stderr)
                     return
             print('[{}] Address swap complete'.format(p))
+        print('[{}] Closed TCP socket'.format(p))
 
 # On the specified port, waits for input from two users (first is host, second client)
 # Sends addresses to each other then closes

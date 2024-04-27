@@ -163,14 +163,7 @@ class Client():
             sock2.bind(('0.0.0.0', portUsed))
             print('[TCP] Listening for host on: {}:{}'.format(*sock2.getsockname()))
             sock2.listen()
-            sock2.setblocking(0)  # Set non-blocking mode
-            try:
-                sock2.connect(host)
-            except socket.error as e:
-                if e.errno == socket.errno.EINPROGRESS:
-                    print('[TCP] Connecting in progress...')
-                else:
-                    raise e
+            Thread(target=self.punch,args=[sock2,host]).start()
             tcp_sock, host = sock2.accept()
             print('[TCP] Host:', *host)
 
@@ -179,6 +172,12 @@ class Client():
             print(ex, file=sys.stderr)
             sys.exit(1)
         return tcp_sock
+    
+    def punch(self, sock, host):
+        try:
+            sock.connect(host)
+        except socket.error as e:
+            print('Host connect() call timed out: Host NAT dropped it')
 
     def stream_from_host(self, file_name: str):
         target_port = self._sock.getsockname()[1]

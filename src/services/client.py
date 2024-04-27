@@ -120,7 +120,7 @@ class Client():
         time.sleep(0.5)  # Giving the server time to process the request
         self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
 
-        buf = 4096
+        buf = 1024
         f = open(file_name, 'wb')
 
         time.sleep(1)  # Give the host time to be first to the server request

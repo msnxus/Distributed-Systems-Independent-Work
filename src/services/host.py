@@ -177,7 +177,7 @@ class Host(QObject):
 
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def upload_to_peer(self, peer_addr, sock: socket.socket):
-        buf = 4096
+        buf = 65535
         # get filename and strip:
         data,addr = sock.recvfrom(buf)
         file_name = data.strip('**__$$'.encode())

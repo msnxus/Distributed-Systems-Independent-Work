@@ -141,7 +141,6 @@ class Client():
     # Will respond with peers addresses. Peers break NAT and say hello to each other.
     def tcp_holepunch(self):
         addr = (params.SERVER_IP,params.TCP_PORT)
-        self.init_cloud_server(addr)
         time.sleep(params.LATENCY_BUFFER)
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

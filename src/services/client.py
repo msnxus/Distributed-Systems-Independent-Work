@@ -64,7 +64,7 @@ class Client():
     
     def recv_host(self):
         while(True):
-                data, addr = self._sock.recvfrom(16384)
+                data, addr = self._sock.recvfrom(65535)
                 if addr == self._host_addr: break
         return data, addr
     

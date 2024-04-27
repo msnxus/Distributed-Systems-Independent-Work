@@ -141,7 +141,7 @@ class Client():
     # Connects to Cloud Matcher, sends packet to alert of its existence. Cloud Matcher
     # Will respond with peers addresses. Peers break NAT and say hello to each other.
     def tcp_holepunch(self):
-        addr = (params.SERVER_IP,params.TCP_PORT)
+        addr = (params.SERVER_IP, params.TCP_PORT)
         time.sleep(params.LATENCY_BUFFER)
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -157,27 +157,38 @@ class Client():
             host = bytes_to_addr(data)
             print('[TCP] Host:', *host)
             sock.close()
-            time.sleep(params.LATENCY_BUFFER)
-            sock2 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock2.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock2.bind(('0.0.0.0', portUsed))
-            print('[TCP] Listening for host on: {}:{}'.format(*sock2.getsockname()))
-            sock2.listen()
-            Thread(target=self.punch,args=[sock2,host]).start()
-            tcp_sock, host = sock2.accept()
-            print('[TCP] Host:', *host)
 
+            # Create a listening socket
+            listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            listener.bind(('0.0.0.0', portUsed))
+            listener.listen()
+            print('[TCP] Listening for host on: {}:{}'.format(*listener.getsockname()))
+
+            # Create a connecting socket
+            connector = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            connector.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            connector.bind(('0.0.0.0', portUsed))  # Bind to the same local port
+
+            # Start the connection attempt in a separate thread
+            Thread(target=self.punch, args=[connector, host]).start()
+
+            # Accept the incoming connection
+            tcp_sock, host_info = listener.accept()
+            print('[TCP] Host:', *host_info)
             time.sleep(0.5)
+            return tcp_sock
+
         except Exception as ex:
             print(ex, file=sys.stderr)
             sys.exit(1)
-        return tcp_sock
-    
+
     def punch(self, sock: socket.socket, host):
         try:
             sock.connect(host)
+            print("[TCP] Connected to peer")
         except socket.error as e:
-            print(e)
+            print(f"Failed to connect: {e}")
 
     def stream_from_host(self, file_name: str):
         target_port = self._sock.getsockname()[1]

@@ -125,13 +125,13 @@ def initialize_filespace(file_data: file_data.FileData):
 
     _filespace.get_sync_button().clicked.connect(handle_sync)
 
+    if not is_host(): collect_eval_data()
+
 def handle_sync():
     if is_host():
         print("Can't sync as host")
     else:
         user.sync_host()
-        time.sleep(params.LATENCY_BUFFER)
-        collect_eval_data()
     _filespace.populate(user.get_data())
 
 def collect_eval_data():

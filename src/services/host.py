@@ -139,11 +139,16 @@ class Host(QObject):
     
             if data == params.SYNC_REQUEST:
                 print('File sync requested')
-                Thread(target=self.sync_with_peer, args=[peer_addr, sock]).start()
+                self.sync_with_peer(peer_addr, sock)
 
             elif data == params.DOWNLOAD_REQUEST:
                 print('Download requested')
-                Thread(target=self.upload_to_peer, args=[peer_addr, sock]).start()
+                buf = 65535
+                data, addr = sock.recvfrom(buf)
+                file_name = data.strip(b'**__$$')
+                print("Request for file:", file_name.decode())
+                tcp_sock = self.tcp_holepunch()
+                multiprocessing.Process(target=self.upload_to_peer, args=[tcp_sock, file_name]).start()
             
             elif data == params.HEARTBEAT:
                 print('thump')
@@ -224,15 +229,11 @@ class Host(QObject):
         return sock2
  
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
-    def upload_to_peer(self, peer_addr, sock: socket.socket):
+    def upload_to_peer(self, sock: socket.socket, file_name):
         buf = 65535
-        data, addr = sock.recvfrom(buf)
-        file_name = data.strip(b'**__$$')
-        print("Request for file:", file_name.decode())
-
         file_path = self._dir + '/' + file_name.decode()
         file_size = os.path.getsize(file_path)
-        tcp_sock = self.tcp_holepunch()
+        tcp_sock = sock
         # use struct to make sure we have a consistent endianness on the length
         length = struct.pack('>Q', file_size)
         tcp_sock.sendall(length)

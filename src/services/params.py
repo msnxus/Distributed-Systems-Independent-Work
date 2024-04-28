@@ -5,4 +5,5 @@ LATENCY_BUFFER = 0.5 # Number of seconds used to buffer server communications
 SYNC_REQUEST = b'0001'
 DOWNLOAD_REQUEST = b'0002'
 STREAM_REQUEST = b'0003'
+HEARTBEAT = b'0004'
 TCP_PORT = 10003

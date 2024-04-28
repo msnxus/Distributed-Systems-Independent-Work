@@ -130,8 +130,9 @@ def handle_sync():
         print("Can't sync as host")
     else:
         user.sync_host()
+        time.sleep(params.LATENCY_BUFFER)
+        collect_eval_data()
     _filespace.populate(user.get_data())
-    collect_eval_data()
 
 def collect_eval_data():
     for file in user.get_data().get_data():

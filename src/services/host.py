@@ -254,11 +254,11 @@ class Host(QObject):
             print(e, file=sys.stderr)
         else:
             end_time = time.time()  # End timing
+            elapsed_time = end_time - start_time
             # Log to CSV
             with open('file_transfer_log.csv', mode='a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([file_name, file_size, elapsed_time])
-            elapsed_time = end_time - start_time
             print('Finished sending')
             print(f"Time elapsed: {elapsed_time:.2f} seconds")
             print(tcp_sock.recv(1024).decode())

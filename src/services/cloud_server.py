@@ -43,7 +43,7 @@ def tcp_server():
                 sock_client.send(bs)
                 (length,) = struct.unpack('>Q', bs)
                 try:
-                    buf = 65535
+                    buf = 655350
                     sock_host.settimeout(5)  # Initial timeout for receiving the first packet
                     sent = 0
                     while sent < length:

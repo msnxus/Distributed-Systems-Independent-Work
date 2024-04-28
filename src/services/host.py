@@ -20,6 +20,7 @@ import pickle
 import subprocess
 import struct
 import os
+import csv
 
 #------------------------------------------------------------------
 class Host(QObject):
@@ -219,7 +220,7 @@ class Host(QObject):
  
     # adapted from: https://stackoverflow.com/questions/13993514/sending-receiving-file-udp-in-python
     def upload_to_peer(self, peer_addr, sock: socket.socket):
-        buf = 16384
+        buf = 65535
         data, addr = sock.recvfrom(buf)
         file_name = data.strip(b'**__$$')
         print("Request for file:", file_name.decode())
@@ -253,6 +254,10 @@ class Host(QObject):
             print(e, file=sys.stderr)
         else:
             end_time = time.time()  # End timing
+            # Log to CSV
+            with open('file_transfer_log.csv', mode='a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow([file_name, file_size, elapsed_time])
             elapsed_time = end_time - start_time
             print('Finished sending')
             print(f"Time elapsed: {elapsed_time:.2f} seconds")

@@ -117,8 +117,15 @@ class Client():
         print('Sent download request to host')
         time.sleep(0.5)  # Giving the server time to process the request
         self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
-        multiprocessing.Process(target=self.dwlnd,args=[file_name]).start()
-        multiprocessing.Process(target=self.write_from_q,args=[file_name]).start()
+        p1 = multiprocessing.Process(target=self.dwlnd,args=[file_name])
+        p2 = multiprocessing.Process(target=self.write_from_q,args=[file_name])
+        p1.start()
+        p2.start()
+
+        # Use to collect eval data-----
+        p1.join()
+        p2.join()
+        #------------------------------
 
     def write_from_q(self, file_name):
         f = open(file_name, 'wb')
@@ -236,7 +243,7 @@ class Client():
             '-infbuf',  # No buffer size limit, useful for live streams
             '-sync', 'video'  # Sync to video if audio is not present or important
         ]
-        subprocess.run(command)
+        #subprocess.run(command)
 
 
 #------------------------------------------------------------------

@@ -131,6 +131,11 @@ def handle_sync():
     else:
         user.sync_host()
     _filespace.populate(user.get_data())
+    collect_eval_data()
+
+def collect_eval_data():
+    for file in user.get_data().get_data():
+        user.download_from_host(file['name'])
 
 #------------------------------------------------------------------
 #   Homepage

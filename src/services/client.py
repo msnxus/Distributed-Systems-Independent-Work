@@ -123,11 +123,6 @@ class Client():
         p1.start()
         p2.start()
 
-        # Use to collect eval data-----
-        p1.join()
-        p2.join()
-        #------------------------------
-
     def write_from_q(self, file_name):
         f = open(file_name, 'wb')
         while True:

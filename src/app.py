@@ -124,8 +124,8 @@ def initialize_filespace(file_data: file_data.FileData):
     _filespace.get_table().clicked.connect(lambda index: initialize_fileviewer(index, user.get_data()))
 
     _filespace.get_sync_button().clicked.connect(handle_sync)
-    
-    if not is_host(): collect_eval_data()
+
+    #if not is_host(): collect_eval_data()
 
 def handle_sync():
     if is_host():

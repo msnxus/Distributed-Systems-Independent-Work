@@ -130,9 +130,10 @@ class Client():
                 f.close()
                 print(ex)
                 print('Finished writing from queue on timeout and closed file')
+                break
 
     def dwlnd(self, file_name:str):
-        buf = 16384
+        buf = 65535
         time.sleep(1)  # Give the host time to be first to the server request
         tcp_sock = self.tcp_holepunch()
         bs = tcp_sock.recv(8)

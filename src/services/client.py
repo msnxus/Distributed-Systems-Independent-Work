@@ -122,12 +122,13 @@ class Client():
 
     def write_from_q(self, file_name):
         f = open(file_name, 'wb')
-        try:
-            data = self._queue.get(block = True, timeout=20)
-            f.write(data)
-        except TimeoutError as ex:
-            f.close()
-            print('Finished writing from queue on timeout and closed file')
+        while True:
+            try:
+                data = self._queue.get(block = True, timeout=20)
+                f.write(data)
+            except TimeoutError as ex:
+                f.close()
+                print('Finished writing from queue on timeout and closed file')
 
     def dwlnd(self, file_name:str):
         buf = 1024

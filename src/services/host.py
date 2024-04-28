@@ -21,6 +21,7 @@ import subprocess
 import struct
 import os
 import csv
+import multiprocessing
 
 #------------------------------------------------------------------
 class Host(QObject):
@@ -138,11 +139,15 @@ class Host(QObject):
     
             if data == params.SYNC_REQUEST:
                 print('File sync requested')
-                self.sync_with_peer(peer_addr, sock)
+                multiprocessing.Process(target=self.sync_with_peer, args=[peer_addr, sock]).start()
 
             elif data == params.DOWNLOAD_REQUEST:
                 print('Download requested')
-                self.upload_to_peer(peer_addr, sock)
+                multiprocessing.Process(target=self.upload_to_peer, args=[peer_addr, sock]).start()
+            
+            elif data == params.HEARTBEAT:
+                print('thump')
+                sock.sendto(params.HEARTBEAT, peer_addr)
 
             elif data == params.STREAM_REQUEST:
                 print('Stream requested')

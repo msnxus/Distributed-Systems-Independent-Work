@@ -35,7 +35,9 @@ class Client():
 
         self._success = self.attempt_connection()
 
-        if self.successful_connection: self.sync_host()
+        if self.successful_connection:
+            self.sync_host()
+            Thread(target=self.heartbeat).start()
         else: self._sock.close()
 
     def get_client_port(self):
@@ -82,6 +84,13 @@ class Client():
         else:
             self._liked[filename] = False
             self._data.unlike(filename)
+
+    def heartbeat(self):
+        while True:
+            time.sleep(30)
+            self._sock.sendto(params.HEARTBEAT, self._host_addr)
+            self._sock.recvfrom(4)
+            print('thump')
         
     def add_dislike(self, filename):
         if filename not in self._disliked or self._disliked[filename] == False:

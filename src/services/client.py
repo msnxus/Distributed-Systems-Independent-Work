@@ -84,13 +84,6 @@ class Client():
         else:
             self._liked[filename] = False
             self._data.unlike(filename)
-
-    def heartbeat(self):
-        while True:
-            time.sleep(30)
-            self._sock.sendto(params.HEARTBEAT, self._host_addr)
-            self._sock.recvfrom(4)
-            print('thump')
         
     def add_dislike(self, filename):
         if filename not in self._disliked or self._disliked[filename] == False:

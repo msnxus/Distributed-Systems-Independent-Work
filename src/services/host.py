@@ -148,11 +148,7 @@ class Host(QObject):
                 file_name = data.strip(b'**__$$')
                 print("Request for file:", file_name.decode())
                 tcp_sock = self.tcp_holepunch()
-                multiprocessing.Process(target=self.upload_to_peer, args=[tcp_sock, file_name]).start()
-            
-            elif data == params.HEARTBEAT:
-                print('thump')
-                sock.sendto(params.HEARTBEAT, peer_addr)
+                self.upload_to_peer(tcp_sock, file_name)
 
             elif data == params.STREAM_REQUEST:
                 print('Stream requested')

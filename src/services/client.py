@@ -126,12 +126,13 @@ class Client():
             try:
                 data = self._queue.get(block = True, timeout=20)
                 f.write(data)
-            except TimeoutError as ex:
+            except Exception as ex:
                 f.close()
+                print(ex)
                 print('Finished writing from queue on timeout and closed file')
 
     def dwlnd(self, file_name:str):
-        buf = 1024
+        buf = 4096
         time.sleep(1)  # Give the host time to be first to the server request
         tcp_sock = self.tcp_holepunch()
         bs = tcp_sock.recv(8)

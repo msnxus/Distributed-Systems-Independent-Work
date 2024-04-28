@@ -178,8 +178,8 @@ def client_clicked_slot(password):
     client = services.client.Client((params.SERVER_IP, port))
 
     if client.successful_connection():
-        initialize_filespace(client.get_data())
         user = client
+        initialize_filespace(client.get_data())
     else:
         # Handle unsuccessful connection
         client_rejected(password)

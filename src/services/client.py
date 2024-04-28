@@ -37,7 +37,6 @@ class Client():
 
         if self.successful_connection:
             self.sync_host()
-            Thread(target=self.heartbeat).start()
         else: self._sock.close()
 
     def get_client_port(self):

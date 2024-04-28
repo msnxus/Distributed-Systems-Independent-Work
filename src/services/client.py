@@ -17,7 +17,6 @@ import params
 import time
 import pickle
 import multiprocessing
-import queue
 import struct
 import file_data # CANT BE FOUND NORMALLY
 
@@ -32,7 +31,7 @@ class Client():
         self._host_data = None
         self._liked = {}
         self._disliked = {}
-        self._queue = queue.Queue()
+        self._queue = multiprocessing.Queue()
 
         self._success = self.attempt_connection()
 
@@ -118,16 +117,16 @@ class Client():
         print('Sent download request to host')
         time.sleep(0.5)  # Giving the server time to process the request
         self._sock.sendto(bytes(file_name + "**__$$", encoding='utf-8'), self._host_addr)
-        f = open(file_name, 'wb')
         multiprocessing.Process(target=self.dwlnd,args=[file_name]).start()
-        multiprocessing.Process(target=self.write_from_q,args=[f]).start()
+        multiprocessing.Process(target=self.write_from_q,args=[file_name]).start()
 
-    def write_from_q(self, file):
+    def write_from_q(self, file_name):
+        f = open(file_name, 'wb')
         try:
             data = self._queue.get(block = True, timeout=20)
-            file.write(data)
+            f.write(data)
         except TimeoutError as ex:
-            file.close()
+            f.close()
             print('Finished writing from queue on timeout and closed file')
 
     def dwlnd(self, file_name:str):
@@ -151,7 +150,6 @@ class Client():
         except socket.error as e:
             print(f"Socket error: {e}")
         finally:
-            f.close()
             tcp_sock.close()
             print("File downloaded or download stopped due to error.")
 

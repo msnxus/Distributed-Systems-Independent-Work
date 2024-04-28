@@ -139,11 +139,11 @@ class Host(QObject):
     
             if data == params.SYNC_REQUEST:
                 print('File sync requested')
-                multiprocessing.Process(target=self.sync_with_peer, args=[peer_addr, sock]).start()
+                Thread(target=self.sync_with_peer, args=[peer_addr, sock]).start()
 
             elif data == params.DOWNLOAD_REQUEST:
                 print('Download requested')
-                multiprocessing.Process(target=self.upload_to_peer, args=[peer_addr, sock]).start()
+                Thread(target=self.upload_to_peer, args=[peer_addr, sock]).start()
             
             elif data == params.HEARTBEAT:
                 print('thump')

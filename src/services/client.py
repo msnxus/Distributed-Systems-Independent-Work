@@ -131,7 +131,7 @@ class Client():
         f = open(file_name, 'wb')
         while True:
             try:
-                data = self._queue.get(block = True, timeout=5)
+                data = self._queue.get(block = True, timeout=20)
                 f.write(data)
             except Exception as ex:
                 f.close()

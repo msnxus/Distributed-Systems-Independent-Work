@@ -256,7 +256,7 @@ class Host(QObject):
             end_time = time.time()  # End timing
             elapsed_time = end_time - start_time
             # Log to CSV
-            with open('file_transfer_log.csv', mode='a', newline='') as file:
+            with open('file_transfer_log_eval.csv', mode='a', newline='') as file:
                 writer = csv.writer(file)
                 writer.writerow([file_name, file_size, elapsed_time])
             print('Finished sending')
